@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription client | Garage Pro One</title>
+  <script src="./assets/firebase-config.js"></script>
+  <style>
+    :root{
+      --bg:#f4f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--line:#dbe3ee;
+      --primary:#2563eb;--primary-2:#1d4ed8;--ok:#15803d;--warn:#b45309;--danger:#b91c1c;
+      --shadow:0 18px 45px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#edf4ff 0%,#f8fafc 30%,#f4f7fb 100%);color:var(--text)}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    .hero{display:flex;gap:16px;align-items:center;justify-content:center;padding:18px 0 8px}
+    .hero img{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:16px;padding:8px;box-shadow:var(--shadow)}
+    .hero h1{margin:0;font-size:28px}
+    .hero p{margin:4px 0 0;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel{padding:20px}
+    .panel h2{margin:0 0 8px;font-size:24px}
+    .panel .sub{margin:0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+    .section{padding:18px}
+    .section h3{margin:0 0 14px;font-size:18px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .field label{font-size:14px;font-weight:600}
+    .field input,.field select,.field textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font-size:16px;outline:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+    .hint{font-size:12px;color:var(--muted)}
+    .vin-row{display:flex;gap:10px}
+    .vin-row input{flex:1}
+    .btn{border:none;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:700;cursor:pointer}
+    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-2)}
+    .btn-soft{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+    .btn-soft:hover{background:#dbeafe}
+    .btn-block{width:100%}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .status{margin-top:14px;padding:14px;border-radius:14px;display:none;font-size:14px;font-weight:600}
+    .status.ok{display:block;background:#ecfdf5;color:var(--ok);border:1px solid #bbf7d0}
+    .status.err{display:block;background:#fef2f2;color:var(--danger);border:1px solid #fecaca}
+    .status.info{display:block;background:#fff7ed;color:var(--warn);border:1px solid #fed7aa}
+    .preview{margin-top:16px;padding:16px;border:1px dashed #cbd5e1;border-radius:14px;background:#f8fafc}
+    .preview h4{margin:0 0 10px}.preview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .pill{background:#fff;border:1px solid var(--line);padding:10px;border-radius:12px}
+    .pill b{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    .foot{padding:16px 2px 28px;text-align:center;color:var(--muted);font-size:13px}
+    @media (max-width:760px){.grid,.preview-grid{grid-template-columns:1fr}.hero{align-items:flex-start;justify-content:flex-start}.hero h1{font-size:24px}.wrap{padding:14px}.panel{padding:16px}.section{padding:16px}.vin-row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <img id="heroLogo" src="./assets/logo.png" alt="Garage Pro One" />
+      <div>
+        <h1 id="heroTitle">Garage Pro One</h1>
+        <p id="heroSubtitle">Inscription client et véhicule depuis votre téléphone</p>
+      </div>
+    </div>
+
+    <div class="card panel">
+      <h2>Première visite</h2>
+      <p class="sub">Remplissez vos informations et celles de votre voiture. Le numéro VIN peut remplir automatiquement la marque, le modèle, l’année, le type de moteur, le nombre de cylindres et le type de véhicule.</p>
+
+      <div class="grid">
+        <div class="card section">
+          <h3>Informations client</h3>
+          <div class="field"><label for="fullName">Nom complet</label><input id="fullName" placeholder="Ex: Allaoua Boucheneb" /></div>
+          <div class="field"><label for="phone">Téléphone</label><input id="phone" inputmode="tel" placeholder="Ex: 514-555-1234" /></div>
+          <div class="field"><label for="email">Email</label><input id="email" inputmode="email" placeholder="Ex: client@email.com" /></div>
+          <div class="field"><label for="address">Adresse</label><input id="address" placeholder="Ex: Montréal" /></div>
+        </div>
+
+        <div class="card section">
+          <h3>Informations véhicule</h3>
+          <div class="field">
+            <label for="vin">VIN</label>
+            <div class="vin-row">
+              <input id="vin" maxlength="17" placeholder="17 caractères" autocapitalize="characters" />
+              <button type="button" class="btn btn-soft" id="btnDecodeVin">Remplir avec VIN</button>
+            </div>
+            <div class="hint">Le décodage VIN peut remplir automatiquement la marque, le modèle, l’année, le moteur, les cylindres et le type de véhicule quand ces données sont disponibles.</div>
+          </div>
+          <div class="field"><label for="make">Marque</label><input id="make" placeholder="Ex: Toyota" /></div>
+          <div class="field"><label for="model">Modèle</label><input id="model" placeholder="Ex: Sienna" /></div>
+          <div class="field"><label for="year">Année</label><input id="year" inputmode="numeric" placeholder="Ex: 2023" /></div>
+          <div class="field"><label for="plate">Plaque</label><input id="plate" placeholder="Ex: ABC123" autocapitalize="characters" /></div>
+          <div class="field"><label for="mileage">Kilométrage actuel</label><input id="mileage" inputmode="numeric" placeholder="Ex: 151000" /></div>
+          <div class="field"><label for="engineType">Type de moteur</label>
+            <select id="engineType">
+              <option value="">—</option>
+              <option>Essence</option>
+              <option>Diesel</option>
+              <option>Hybride</option>
+              <option>Hybride rechargeable</option>
+              <option>Électrique</option>
+              <option>V6</option>
+              <option>V8</option>
+              <option>4 cylindres</option>
+              <option>6 cylindres</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div class="field"><label for="cylinders">Nombre de cylindres</label>
+            <select id="cylinders">
+              <option value="">—</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6</option>
+              <option>8</option>
+              <option>10</option>
+              <option>12</option>
+            </select>
+          </div>
+          <div class="field"><label for="bodyType">Type de véhicule</label>
+            <select id="bodyType">
+              <option value="">—</option>
+              <option>Berline</option>
+              <option>Coupé</option>
+              <option>Hatchback</option>
+              <option>SUV</option>
+              <option>Crossover</option>
+              <option>Pickup</option>
+              <option>Van</option>
+              <option>Fourgonnette</option>
+              <option>Wagon</option>
+              <option>Autre</option>
+            </select>
+          </div>
+          <div class="field"><label for="color">Couleur</label><input id="color" placeholder="Ex: Blanc" /></div>
+          <div class="field"><label for="notes">Notes</label><textarea id="notes" rows="4" placeholder="Ex: Bruit au freinage, voyant moteur, etc."></textarea></div>
+        </div>
+      </div>
+
+      <div class="preview" id="vinPreview" style="display:none">
+        <h4>Informations trouvées par VIN</h4>
+        <div class="preview-grid" id="vinPreviewGrid"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary btn-block" id="btnRegister">S’inscrire</button>
+      </div>
+      <div class="status" id="formStatus"></div>
+    </div>
+
+    <div class="foot" id="footText">Page publique d’inscription client · Garage Pro One</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const app = initializeApp(window.FIREBASE_CONFIG);
+    const db = getFirestore(app);
+
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $('formStatus');
+
+    const heroTitle = $('heroTitle');
+    const heroSubtitle = $('heroSubtitle');
+    const heroLogo = $('heroLogo');
+    const footText = $('footText');
+    let garageSettings = null;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const garageId = String(urlParams.get('garageId') || urlParams.get('g') || '').trim();
+    if(!garageId){
+      setTimeout(() => showStatus('info', "Lien incomplet : ajoute ?garageId=ton-garage dans l’URL."), 0);
+    }
+    function garageCol(name){
+      if(!garageId) throw new Error('missing-garageId');
+      return collection(doc(db, 'garages', garageId), name);
+    }
+
+    function showStatus(type, text){
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = text;
+    }
+
+
+    async function loadGarageBranding(){
+      if(!garageId) return;
+      try {
+        const snap = await getDoc(doc(db, 'garages', garageId, 'settings', 'main'));
+        if(!snap.exists()) return;
+        garageSettings = snap.data() || {};
+        const garageName = garageSettings.garageName || garageSettings.name || garageSettings.businessName || 'Garage Pro One';
+        const logoUrl = garageSettings.garageLogoUrl || garageSettings.logoUrl || '';
+        heroTitle.textContent = garageName;
+        heroSubtitle.textContent = `Inscription client et véhicule pour ${garageName}`;
+        footText.textContent = `Page publique d’inscription client · ${garageName}`;
+        document.title = `Inscription client | ${garageName}`;
+        if(logoUrl){
+          heroLogo.src = logoUrl;
+          heroLogo.alt = garageName;
+        }
+      } catch (err) {
+        console.error('loadGarageBranding', err);
+      }
+    }
+
+    function normalizeVin(v){ return (v || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,''); }
+    function normalizePhone(v){ return (v || '').replace(/\D/g,''); }
+
+    function mapBodyType(v){
+      const s=(v||'').toLowerCase();
+      if(!s) return '';
+      if(s.includes('sport utility') || s.includes('suv')) return 'SUV';
+      if(s.includes('van') || s.includes('minivan')) return 'Van';
+      if(s.includes('pickup') || s.includes('truck')) return 'Pickup';
+      if(s.includes('wagon')) return 'Wagon';
+      if(s.includes('hatchback') || s.includes('liftback')) return 'Hatchback';
+      if(s.includes('coupe')) return 'Coupé';
+      if(s.includes('sedan') || s.includes('saloon')) return 'Berline';
+      if(s.includes('crossover') || s.includes('cuv')) return 'Crossover';
+      return 'Autre';
+    }
+
+    function mapEngineType(v){
+      const s=(v||'').toLowerCase();
+      if(!s) return '';
+      if(s.includes('electric')) return 'Électrique';
+      if(s.includes('plug-in') || s.includes('phev')) return 'Hybride rechargeable';
+      if(s.includes('hybrid')) return 'Hybride';
+      if(s.includes('diesel')) return 'Diesel';
+      if(s.includes('gasoline') || s.includes('petrol') || s.includes('flexible fuel') || s.includes('cng')) return 'Essence';
+      return 'Autre';
+    }
+
+    function fillPreview(data){
+      const preview = $('vinPreview');
+      const grid = $('vinPreviewGrid');
+      const items = [
+        ['Marque', data.make || '—'],
+        ['Modèle', data.model || '—'],
+        ['Année', data.year || '—'],
+        ['Type', data.vehicleType || data.bodyType || '—'],
+        ['Moteur', data.engine || data.fuelType || '—'],
+        ['Cylindres', data.cylinders || '—'],
+        ['Transmission', data.transmission || '—'],
+      ];
+      grid.innerHTML = items.map(([k,v]) => `<div class="pill"><b>${k}</b>${String(v)}</div>`).join('');
+      preview.style.display = 'block';
+    }
+
+    async function decodeVin(){
+      const vin = normalizeVin($('vin').value);
+      $('vin').value = vin;
+      if(vin.length < 11){
+        showStatus('info', 'Entrez un VIN valide d’au moins 11 caractères.');
+        return;
+      }
+      showStatus('info', 'Lecture du VIN en cours...');
+      try {
+        const yearGuess = $('year').value.trim();
+        const url = `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${encodeURIComponent(vin)}?format=json${yearGuess ? `&modelyear=${encodeURIComponent(yearGuess)}` : ''}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if(!res.ok) throw new Error('VIN API HTTP ' + res.status);
+        const json = await res.json();
+        const row = (json.Results && json.Results[0]) || {};
+        const decoded = {
+          make: row.Make || '',
+          model: row.Model || '',
+          year: row.ModelYear || '',
+          vehicleType: row.VehicleType || '',
+          bodyType: row.BodyClass || '',
+          fuelType: row.FuelTypePrimary || '',
+          engine: row.EngineModel || row.DisplacementL || row.FuelTypePrimary || '',
+          cylinders: row.EngineCylinders || '',
+          transmission: row.TransmissionStyle || ''
+        };
+        if(decoded.make && !$('make').value.trim()) $('make').value = decoded.make;
+        if(decoded.model && !$('model').value.trim()) $('model').value = decoded.model;
+        if(decoded.year && !$('year').value.trim()) $('year').value = decoded.year;
+        if(decoded.cylinders && !$('cylinders').value.trim()) $('cylinders').value = String(decoded.cylinders);
+        if(decoded.bodyType && !$('bodyType').value.trim()) $('bodyType').value = mapBodyType(decoded.bodyType);
+        if(decoded.fuelType && !$('engineType').value.trim()) $('engineType').value = mapEngineType(decoded.fuelType);
+        fillPreview(decoded);
+        showStatus('ok', decoded.make || decoded.model || decoded.year ? 'VIN lu avec succès.' : 'VIN lu, mais certaines données ne sont pas disponibles.');
+      } catch (err) {
+        console.error(err);
+        showStatus('err', 'Impossible de lire le VIN pour le moment. Vérifiez la connexion et le VIN.');
+      }
+    }
+
+    async function register(){
+      const payload = {
+        fullName: $('fullName').value.trim(),
+        phone: normalizePhone($('phone').value),
+        email: $('email').value.trim().toLowerCase(),
+        address: $('address').value.trim(),
+        make: $('make').value.trim(),
+        model: $('model').value.trim(),
+        year: $('year').value.trim(),
+        plate: $('plate').value.trim().toUpperCase(),
+        vin: normalizeVin($('vin').value),
+        mileage: $('mileage').value.trim(),
+        engineType: $('engineType').value.trim(),
+        cylinders: $('cylinders').value.trim(),
+        bodyType: $('bodyType').value.trim(),
+        color: $('color').value.trim(),
+        notes: $('notes').value.trim(),
+      };
+      if(!payload.fullName || !payload.phone || !payload.make || !payload.model){
+        showStatus('err', 'Veuillez remplir au minimum le nom, téléphone, marque et modèle.');
+        return;
+      }
+      try {
+        showStatus('info', 'Enregistrement en cours...');
+        if(!garageId) throw new Error('missing-garageId');
+        const customerRef = await addDoc(garageCol('customers'), {
+          garageId,
+          name: payload.fullName,
+          fullName: payload.fullName,
+          phone: payload.phone,
+          email: payload.email,
+          address: payload.address,
+          notes: '',
+          source: 'client_self_register',
+          createdAt: serverTimestamp(),
+        });
+        await addDoc(garageCol('vehicles'), {
+          garageId,
+          customerId: customerRef.id,
+          make: payload.make,
+          model: payload.model,
+          year: payload.year ? Number(payload.year) : null,
+          plate: payload.plate,
+          vin: payload.vin,
+          mileage: payload.mileage ? Number(payload.mileage) : null,
+          currentKm: payload.mileage ? Number(payload.mileage) : null,
+          engineType: payload.engineType || '',
+          cylinders: payload.cylinders || '',
+          bodyType: payload.bodyType || '',
+          color: payload.color || '',
+          notes: payload.notes || '',
+          source: 'client_self_register',
+          createdAt: serverTimestamp(),
+        });
+
+        const garageName = (garageSettings && (garageSettings.garageName || garageSettings.name || garageSettings.businessName)) || 'le garage';
+        showStatus('ok', `Inscription enregistrée avec succès chez ${garageName}. Nous vous contacterons au besoin.`);
+        ['fullName','phone','email','address','make','model','year','plate','vin','mileage','engineType','cylinders','bodyType','color','notes'].forEach(id => $(id).value='');
+        $('vinPreview').style.display = 'none';
+        $('vinPreviewGrid').innerHTML = '';
+      } catch (err) {
+        console.error(err);
+        showStatus('err', String(err?.message||'').includes('missing-garageId') ? "Lien incomplet : ajoute ?garageId=ton-garage dans l’URL." : "Enregistrement impossible. Vérifiez les règles Firestore et le garageId.");
+      }
+    }
+
+    loadGarageBranding();
+
+    $('btnDecodeVin').addEventListener('click', decodeVin);
+    $('vin').addEventListener('blur', () => { if(normalizeVin($('vin').value).length >= 11) decodeVin(); });
+    $('btnRegister').addEventListener('click', register);
+  </script>
+</body>
+</html>

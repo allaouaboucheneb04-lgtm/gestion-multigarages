@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function myStaffPath() { return /databases/$(database)/documents/staff/$(request.auth.uid); }
+    function myStaffExists() { return signedIn() && exists(myStaffPath()); }
+    function myStaffData() { return myStaffExists() ? get(myStaffPath()).data : null; }
+    function myRole() { return myStaffExists() ? myStaffData().role : null; }
+    function myGarageId() { return myStaffExists() ? myStaffData().garageId : null; }
+    function isSuperAdmin() { return signedIn() && myRole() == "superadmin"; }
+    function isAdmin() { return signedIn() && myRole() == "admin"; }
+    function isMechanic() { return signedIn() && myRole() == "mechanic"; }
+    function isGarageMember(garageId) { return signedIn() && myGarageId() == garageId; }
+    function isGarageAdmin(garageId) { return isSuperAdmin() || (isAdmin() && isGarageMember(garageId)); }
+    function isGarageWorker(garageId) { return isSuperAdmin() || ((isAdmin() || isMechanic()) && isGarageMember(garageId)); }
+    function validRole(role) { return role == "superadmin" || role == "admin" || role == "mechanic"; }
+
+    function settingsPath(garageId) {
+      return /databases/$(database)/documents/garages/$(garageId)/settings/main;
+    }
+    function settingsExists(garageId) { return exists(settingsPath(garageId)); }
+    function pageEnabled(garageId, pageKey) {
+      return isSuperAdmin()
+        || !settingsExists(garageId)
+        || !('enabledPages' in get(settingsPath(garageId)).data)
+        || !(pageKey in get(settingsPath(garageId)).data.enabledPages)
+        || get(settingsPath(garageId)).data.enabledPages[pageKey] == true;
+    }
+
+    match /garages/{garageId} {
+      allow get: if isSuperAdmin() || isGarageMember(garageId);
+      allow list: if isSuperAdmin();
+      allow create: if isSuperAdmin();
+      allow update: if isGarageAdmin(garageId);
+      allow delete: if isSuperAdmin();
+
+      match /settings/{docId} {
+        allow get, list: if isSuperAdmin() || isGarageMember(garageId);
+        allow create, update: if isGarageAdmin(garageId);
+        allow delete: if isSuperAdmin();
+      }
+
+      match /customers/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "clients");
+        allow create, update: if isGarageWorker(garageId) && pageEnabled(garageId, "clients");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "clients");
+      }
+
+      match /vehicles/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "clients");
+        allow create, update: if isGarageWorker(garageId) && pageEnabled(garageId, "clients");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "clients");
+      }
+
+      match /workorders/{id} {
+        allow get: if pageEnabled(garageId, "repairs") && (
+          isSuperAdmin() || (isAdmin() && isGarageMember(garageId)) ||
+          (isMechanic() && isGarageMember(garageId) && resource.data.assignedTo == request.auth.uid)
+        );
+        allow list: if pageEnabled(garageId, "repairs") && (
+          isSuperAdmin() || (isAdmin() && isGarageMember(garageId)) || (isMechanic() && isGarageMember(garageId))
+        );
+        allow create: if isGarageWorker(garageId) && pageEnabled(garageId, "repairs");
+        allow update: if pageEnabled(garageId, "repairs") && (
+          isSuperAdmin() || (isAdmin() && isGarageMember(garageId)) ||
+          (isMechanic() && isGarageMember(garageId) && resource.data.assignedTo == request.auth.uid)
+        );
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "repairs");
+      }
+
+      match /invoices/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "invoices");
+        allow create, update: if isGarageAdmin(garageId) && pageEnabled(garageId, "invoices");
+        allow delete: if isSuperAdmin();
+      }
+
+      match /parts/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "partsExpenses");
+        allow create, update: if isGarageWorker(garageId) && pageEnabled(garageId, "partsExpenses");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "partsExpenses");
+      }
+
+      match /suppliers/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "suppliers");
+        allow create, update: if isGarageAdmin(garageId) && pageEnabled(garageId, "suppliers");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "suppliers");
+      }
+
+      match /expenses_parts/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "partsExpenses");
+        allow create, update: if isGarageWorker(garageId) && pageEnabled(garageId, "partsExpenses");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "partsExpenses");
+      }
+
+      match /promotions/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageMember(garageId)) && pageEnabled(garageId, "promotions");
+        allow create, update: if isGarageAdmin(garageId) && pageEnabled(garageId, "promotions");
+        allow delete: if isGarageAdmin(garageId) && pageEnabled(garageId, "promotions");
+      }
+
+      match /promotion_sends/{id} {
+        allow get, list: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "promotions");
+        allow create: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "promotions");
+        allow update: if false;
+        allow delete: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "promotions");
+      }
+
+      match /invites/{inviteCode} {
+        allow get: if isSuperAdmin() || isGarageAdmin(garageId) || (resource.data.active == true && resource.data.used == false);
+        allow list: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "notifications");
+        allow create: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "notifications");
+        allow update: if isSuperAdmin() || (isGarageAdmin(garageId) && pageEnabled(garageId, "notifications")) || (signedIn() && resource.data.active == true && resource.data.used == false);
+        allow delete: if (isSuperAdmin() || isGarageAdmin(garageId)) && pageEnabled(garageId, "notifications");
+      }
+
+      match /logs/{id} {
+        allow get, list: if isSuperAdmin() || isGarageAdmin(garageId);
+        allow create: if isSuperAdmin() || isGarageWorker(garageId);
+        allow update: if false;
+        allow delete: if isSuperAdmin();
+      }
+    }
+
+    match /staff/{uid} {
+      allow get: if (signedIn() && request.auth.uid == uid)
+        || (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "superadmin")
+        || (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "admin" && resource.data.garageId == get(myStaffPath()).data.garageId && pageEnabled(resource.data.garageId, "notifications"));
+      allow list: if signedIn() && exists(myStaffPath()) && (get(myStaffPath()).data.role == "superadmin" || (get(myStaffPath()).data.role == "admin" && pageEnabled(get(myStaffPath()).data.garageId, "notifications")));
+      allow create: if (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "superadmin" && validRole(request.resource.data.role))
+        || (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "admin" && request.resource.data.garageId == get(myStaffPath()).data.garageId && validRole(request.resource.data.role) && request.resource.data.role != "superadmin" && pageEnabled(request.resource.data.garageId, "notifications"))
+        || (signedIn() && request.auth.uid == uid && validRole(request.resource.data.role) && request.resource.data.role != "superadmin");
+      allow update: if (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "superadmin" && validRole(request.resource.data.role))
+        || (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "admin" && resource.data.garageId == get(myStaffPath()).data.garageId && request.resource.data.garageId == get(myStaffPath()).data.garageId && validRole(request.resource.data.role) && request.resource.data.role != "superadmin" && pageEnabled(resource.data.garageId, "notifications"));
+      allow delete: if (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "superadmin")
+        || (signedIn() && exists(myStaffPath()) && get(myStaffPath()).data.role == "admin" && resource.data.garageId == get(myStaffPath()).data.garageId && resource.data.role != "superadmin" && pageEnabled(resource.data.garageId, "notifications"));
+    }
+
+    match /users/{uid} {
+      allow get: if isSuperAdmin() || (signedIn() && request.auth.uid == uid) || (isAdmin() && resource.data.garageId == myGarageId());
+      allow list: if isSuperAdmin() || isAdmin();
+      allow create: if signedIn();
+      allow update: if isSuperAdmin() || (signedIn() && request.auth.uid == uid) || (isAdmin() && resource.data.garageId == myGarageId());
+      allow delete: if isSuperAdmin();
+    }
+
+    match /mail/{id} {
+      allow get, list: if false;
+      allow create: if (isSuperAdmin() || isAdmin()) && pageEnabled(myGarageId(), "promotions");
+      allow update, delete: if false;
+    }
+  }
+}
