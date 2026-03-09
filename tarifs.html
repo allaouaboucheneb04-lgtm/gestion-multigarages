@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxi Étoile - Tarifs</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFCA28">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="#FFD700">
+      <path d="M12 .587l3.668 7.431 8.21 1.194-5.938 5.788 1.402 8.172L12 18.896l-7.342 3.856 1.402-8.172L.122 9.212l8.21-1.194z"/>
+    </svg>
+    <h1>Taxi Étoile</h1>
+  </div>
+
+  <nav class="menu">
+    <a href="index.html">Réservation</a>
+    <a class="active" href="tarifs.html">Tarifs</a>
+    <a href="services.html">Services</a>
+    <a href="a-propos.html">À propos</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <a href="galerie.html">Galerie</a>
+    <a href="politique-confidentialite.html">Confidentialité</a>
+    <a href="conditions.html">Conditions</a>
+  </nav>
+
+  <select id="themeSelector" class="theme-btn">
+    <option value="glass">Glassmorphism</option>
+    <option value="dark">Neon Dark</option>
+    <option value="material">Material Design</option>
+    <option value="simple">Minimaliste</option>
+    <option value="taxi">Taxi Branding</option>
+  </select>
+
+  <p>Consultez nos tarifs officiels</p>
+</header>
+
+<div class="container">
+  <h2>Tarifs Officiels</h2>
+
+  <section class="tarif-box">
+    <h3><i class="fa fa-sun"></i> Tarifs de Jour (5h à 23h)</h3>
+    <ul>
+      <li>Prise en charge : <strong>4.10 $</strong></li>
+      <li>Par kilomètre : <strong>2.05 $</strong></li>
+      <li>Par Minute : <strong>0.77 $</strong> si on roule a 20 km/h ou moins</li>
+      <li>Redevance : <strong>1.05 $</strong></li>
+    </ul>
+  </section>
+
+  <section class="tarif-box">
+    <h3><i class="fa fa-moon"></i> Tarifs de Nuit (23h à 5h)</h3>
+    <ul>
+      <li>Prise en charge : <strong>4.70 $</strong></li>
+      <li>Par kilomètre : <strong>2.35 $</strong></li>
+      <li>Par Minute : <strong>0.87 $</strong> si on roule a 20 km/h ou moins</li>
+      <li>Redevance : <strong>1.05 $</strong></li>
+    </ul>
+  </section>
+
+  <section class="tarif-box">
+    <h3><i class="fa fa-shuttle-van"></i> Tarifs Van</h3>
+    <ul>
+      <li>Pas de supplément pour une Van</li>
+    </ul>
+  </section>
+
+  <section class="tarif-box">
+    <h3><i class="fa fa-suitcase"></i> Bagages</h3>
+    <ul>
+      <li>Valises supplémentaires : <strong>0 $</strong></li>
+    </ul>
+  </section>
+
+  <p style="text-align:center; margin-top:20px;">
+    Les tarifs sont conformes à la réglementation du transport par taxi au Québec.
+  </p>
+</div>
+
+<!-- Bouton Installer PWA -->
+<button id="installBtn" class="install-btn" style="display:none;">
+  📲 Ajouter à l'écran d'accueil
+</button>
+
+<script>
+/* THEME SWITCHING */
+const selector = document.getElementById('themeSelector');
+selector.addEventListener('change', () => {
+  const theme = selector.value;
+  document.body.className = "";
+  document.body.classList.add("theme-" + theme);
+  localStorage.setItem("theme", theme);
+});
+const saved = localStorage.getItem("theme");
+if (saved) {
+  document.body.classList.add("theme-" + saved);
+  selector.value = saved;
+}
+
+/* PWA INSTALL BUTTON */
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+    deferredPrompt = null;
+});
+
+/* SERVICE WORKER */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' });
+}
+</script>
+
+</body>
+</html>

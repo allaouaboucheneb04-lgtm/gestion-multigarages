@@ -1,1507 +1,182 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Garage Pro One — Synchro iPhone + PC</title>
-<link href="./assets/style.css" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Taxi Étoile - Réservation</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFCA28">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Taxi Étoile">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-touch-fullscreen" content="yes">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-<header class="topbar no-print">
-<button class="icon-btn" id="btnMenu" type="button" aria-label="Menu">☰</button>
-
-<div class="brand">
-<img id="garageBrandLogo" src="assets/logo.png" alt="Logo garage" style="height:48px;width:48px;object-fit:cover;margin-right:10px;border-radius:8px" />
-<div class="logo">G</div>
-<div>
-<div id="garageBrandName" class="name">Garage Pro One</div>
-<div class="muted" style="font-size:12px">Synchro automatique (Firebase)</div>
-</div>
-<div class="top-title"><div id="pageTitle" class="page-title">Dashboard</div></div>
-<div class="top-actions" id="topActions"></div>
-
-
-<!-- BARCODE SCAN MODAL (Parts / Inventory) -->
-<div aria-hidden="true" class="modal-backdrop" id="barcodeScanModal" inert style="display:none">
-  <div class="modal" style="width:min(720px, 100%)">
-    <div class="card">
-      <div class="row-between" style="gap:10px">
-        <h2 style="margin:0" id="barcodeScanTitle">Scanner code‑barres</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-ghost btn-small" id="btnToggleTorchBarcode" type="button" title="Lampe (si supportée)">Lampe</button>
-          <button class="btn btn-ghost btn-small" id="btnCloseBarcodeScan" type="button">Fermer</button>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div id="barcodeScanViewport" class="vin-viewport"></div>
-      <small class="muted" style="display:block;margin-top:8px">
-        Compatible: EAN/UPC/Code‑128/Code‑39 (pièces, inventaire, étiquettes fournisseur).
-      </small>
-    </div>
-  </div>
-</div>
-</div>
-
-
-</header>
-<main class="container">
-<!-- AUTH VIEW -->
-
-<div class="app-shell">
-  <aside class="sidebar no-print" id="sidebar">
-    <div class="sidebar-head">
-      <div class="sidebar-brand">
-        <img id="sidebarGarageLogo" src="assets/logo.png" alt="Logo garage" class="sidebar-logo"/>
-        <div>
-          <div id="sidebarGarageName" class="sidebar-name">Garage Pro One</div>
-          <div class="sidebar-sub">Gestion &amp; facturation</div>
-        </div>
-      </div>
-    </div>
-    <div class="sidebar-inner">
-      <nav class="nav" id="navAuthed" style="display:none">
-<button class="btn btn-ghost" data-go="dashboard">🏠 Dashboard</button>
-<button class="btn btn-ghost" data-go="clients">👥 Clients</button>
-<button class="btn btn-ghost" data-go="repairs">🔧 Réparations</button>
-<button class="btn btn-ghost" data-go="notifications" data-role="admin">🔔 Notifications</button>
-<button class="btn btn-ghost" data-go="promotions" data-role="admin">🏷️ Promotions</button>
-<button class="btn btn-ghost" data-go="revenue" data-role="admin">💰 Revenus</button>
-<button class="btn btn-ghost" data-go="fiscal" data-role="admin">🧾 Info fiscaux</button>
-<button class="btn btn-ghost" data-go="partsExpenses" data-role="admin">🧩 Dépenses pièces</button>
-<button class="btn btn-ghost" data-go="suppliers" data-role="admin">🏭 Fournisseurs</button>
-<button class="btn btn-ghost" data-go="invoices" data-role="admin">📄 Factures pièces</button><button class="btn btn-ghost" data-go="settings" data-role="admin">⚙️ Paramètres</button>
-<button class="btn btn-ghost" id="btnLogout">🚪 Déconnexion</button>
-</nav>
-    </div>
-    <div class="sidebar-foot muted">© Garage Pro One</div>
-  </aside>
-  <div class="sidebar-overlay no-print" id="sidebarOverlay" style="display:none"></div>
-  <main class="main">
-<section class="card" id="viewAuth" style="max-width:560px;margin:18px auto; display:none;">
-<h1 style="margin-top:0">Connexion</h1>
-<p class="muted">Connexion par email/mot de passe. Tes données seront synchronisées automatiquement entre iPhone et PC.</p>
-<div class="divider"></div>
-<div class="tabs no-print">
-<button class="tab active" id="tabLogin">Se connecter</button>
-<!-- Création de compte désactivée dans l'app : comptes via Firebase Auth + /users/{uid} créé par admin -->
-<button class="tab" id="tabRegister">Créer un compte (invitation)</button>
-</div>
-<div class="alert" id="authError" style="display:none; margin-top:12px;"></div>
-<div class="note" id="authOk" style="display:none; margin-top:12px;"></div>
-<form class="form" id="formLogin" style="margin-top:12px;">
-<label>Email</label>
-<input name="email" placeholder="ex: toi@gmail.com" required="" type="email"/>
-<label>Mot de passe</label>
-<input name="password" placeholder="••••••••" required="" type="password"/>
-<button class="btn btn-primary" type="submit">Se connecter</button>
-<button class="btn btn-ghost" id="btnForgot" type="button">Mot de passe oublié</button>
-</form>
-
-<form class="form" id="formRegisterInvite" style="margin-top:12px; display:none;">
-<label>Nom complet</label>
-<input name="fullName" placeholder="Nom Prénom" required />
-<label>Code invitation</label>
-<input name="inviteCode" placeholder="Ex: GP-AB12CD" required />
-<label>Email</label>
-<input name="email" placeholder="email@exemple.com" required type="email" />
-<label>Mot de passe</label>
-<input name="password" placeholder="••••••••" required type="password" />
-<label>ID garage (optionnel si tu ouvres le lien d’invitation)</label>
-<input name="garageId" placeholder="Ex: garage-pro-one" />
-<div class="row" style="margin-top:12px">
-<button class="btn btn-primary" type="submit">Créer mon compte</button>
-</div>
-<small class="muted">Le rôle est appliqué automatiquement selon le code invitation. Si tu entres le code à la main, ajoute aussi l’ID garage.</small>
-</form>
-
-<form class="form" id="formRegister" style="margin-top:12px; display:none;">
-<label>Email</label>
-<input name="email" placeholder="ex: toi@gmail.com" required="" type="email"/>
-<label>Mot de passe (min 6)</label>
-<input name="password" placeholder="••••••••" required="" type="password"/>
-<button class="btn btn-primary" type="submit">Créer le compte</button>
-</form>
-<div class="divider"></div>
-<div class="note">
-<strong>Important</strong><br/>
-        Tu dois coller ta configuration Firebase dans <code>assets/firebase-config.js</code> (voir README).
-      </div>
-</section>
-<!-- APP VIEW -->
-<section id="viewApp" style="display:none">
-
-<!-- DASHBOARD -->
-<section class="grid" id="viewDashboard">
-<div class="card" style="grid-column:1/-1">
-<div class="row-between">
-<h2>Recherche rapide</h2>
-<div class="row">
-<button class="btn btn-ghost" data-role="admin" id="btnNewClient">+ Nouveau client</button>
-<button class="btn btn-primary" data-role="admin" id="btnNewRepair">+ Nouvelle réparation</button>
-</div>
-</div>
-<form class="form form-inline" onsubmit="return false;">
-<input id="quickSearch" placeholder="Nom / Téléphone / Plaque / VIN">
-<button class="btn btn-ghost" id="btnPlateScan" type="button" title="Scanner plaque (caméra)">📷 Plaque</button>
-<button class="btn btn-primary" id="btnQuickSearch">Rechercher</button>
-<button class="btn btn-ghost" id="btnClearSearch">Effacer</button>
-</input></form>
-<div class="divider"></div>
-<div class="muted" id="searchResults">Tape une recherche pour afficher les résultats.</div>
-</div>
-<div class="card" style="grid-column:1/-1">
-<h2>Résumé</h2>
-<div class="kpi" id="kpi"></div>
-</div>
-<div class="card" style="grid-column:1/-1">
-<div class="row-between">
-<h2>Réparations ouvertes</h2>
-<button class="btn btn-ghost" data-go="repairs">Voir tout</button>
-</div>
-<div class="table-wrap desktop-only">
-<table>
-<thead><tr>
-<th>Date</th><th>Client</th><th>Réparation</th><th>Total TTC</th><th></th>
-</tr></thead>
-<tbody id="openRepairsTbody">
-<tr><td class="muted" colspan="5">Chargement…</td></tr>
-</tbody>
-</table>
-
-</div>
-<div id="openRepairsCards" class="mobile-only cards-list"></div>
-</div>
-
-<div class="card" style="grid-column:1/-1" data-role="admin">
-  <div class="row-between">
-    <div class="row" style="gap:12px; align-items:baseline">
-      <h2 style="margin:0">Réparations non payées</h2>
-      <span class="muted" id="unpaidRepairsCount">0</span>
-    </div>
-    <button class="btn btn-ghost" data-go="repairs">Voir tout</button>
-  </div>
-  <div class="table-wrap desktop-only">
-    <table>
-      <thead><tr>
-        <th>Date</th><th>Client</th><th>Véhicule</th><th>Montant dû</th><th>Statut</th><th></th>
-      </tr></thead>
-      <tbody id="unpaidRepairsTbody">
-        <tr><td class="muted" colspan="6">Chargement…</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div id="unpaidRepairsCards" class="mobile-only cards-list"></div>
-</div>
-
-<div class="card" style="grid-column:1/-1">
-<h2 style="margin-top:0">Dashboard financier (mois en cours)</h2>
-<!-- Graphiques supprimés -->
-<div class="grid" style="grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-top:10px">
-  <div class="box"><div class="muted">Total client</div><div class="val" id="finSales">$0.00</div></div>
-  <div class="box"><div class="muted">Coût pièces</div><div class="val" id="finParts">$0.00</div></div>
-  <div class="box"><div class="muted">Bénéfice</div><div class="val" id="finProfit">$0.00</div></div>
-  <div class="box"><div class="muted">Factures (mois)</div><div class="val" id="finCount">0</div></div>
-</div>
-
-<div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px">
-  <div class="box">
-    <h3 style="margin-top:0">Par méthode (mois)</h3>
-    <div class="desktop-only" style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Méthode</th>
-            <th style="text-align:right">Total</th>
-            <th style="text-align:right">Coût pièces</th>
-            <th style="text-align:right">Bénéfice</th>
-          </tr>
-        </thead>
-        <tbody id="finByPayTbody"><tr><td class="muted" colspan="4">Aucune donnée.</td></tr></tbody>
-      </table>
-    </div>
-    <div id="finByPayCards" class="mobile-only cards-list"></div>
-  </div>
-  <div class="box">
-    <h3 style="margin-top:0">Par jour (14 derniers jours)</h3>
-    <div class="desktop-only" style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th style="text-align:right">Total</th>
-            <th style="text-align:right">Coût pièces</th>
-            <th style="text-align:right">Bénéfice</th>
-          </tr>
-        </thead>
-        <tbody id="finByDayTbody"><tr><td class="muted" colspan="4">Aucune donnée.</td></tr></tbody>
-      </table>
-    </div>
-    <div id="finByDayCards" class="mobile-only cards-list"></div>
-  </div>
-</div>
-
-</div>
-
-</section>
-
-
-<!-- NOTIFICATIONS -->
-<section class="card" id="viewNotifications" style="display:none">
-  <div class="row-between">
-    <div>
-      <h2 style="margin-top:0">Notifications</h2>
-      <div class="muted">Modifications des mécaniciens et réparations à valider.</div>
-    </div>
-    <div class="row">
-      <button class="btn btn-ghost" id="btnMarkAllNotifRead" type="button">Tout marquer lu</button>
-      <button class="btn btn-ghost" id="btnRefreshNotif" type="button">Rafraîchir</button>
-    </div>
+<header class="hero">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="#FFD700" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 .587l3.668 7.431 8.21 1.194-5.938 5.788 1.402 8.172L12 18.896l-7.342 3.856 1.402-8.172L.122 9.212l8.21-1.194z"/>
+    </svg>
+    <h1>Taxi Étoile</h1>
   </div>
 
-  <div class="divider"></div>
+  <nav class="menu">
+    <a href="index.html" class="active">Réservation</a>
+    <a href="admin.html">Dashboard</a>
+    <a href="tarifs.html">Tarifs</a>
+    <a href="services.html">Services</a>
+    <a href="a-propos.html">À propos</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <a href="galerie.html">Galerie</a>
+    <a href="politique-confidentialite.html">Confidentialité</a>
+    <a href="conditions.html">Conditions</a>
+  </nav>
 
-  <div class="row" style="gap:12px; flex-wrap:wrap">
-    <div class="box" style="min-width:220px">
-      <div class="muted">À valider</div>
-      <div class="val" id="notifPendingCount">0</div>
-    </div>
-    <div class="box" style="min-width:220px">
-      <div class="muted">Nouveaux événements</div>
-      <div class="val" id="notifLogNewCount">0</div>
-    </div>
-  </div>
-
-  <h3>Réparations à valider</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>Date</th><th>Client</th><th>Véhicule</th><th>Par</th><th></th>
-      </tr></thead>
-      <tbody id="notifPendingTbody">
-        <tr><td class="muted" colspan="5">Chargement…</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <h3 style="margin-top:18px">Historique</h3>
-  <div class="row" style="gap:12px; flex-wrap:wrap; align-items:flex-end">
-    <div style="min-width:220px">
-      <label class="muted" style="display:block;margin-bottom:6px">Période</label>
-      <select id="notifPeriod">
-        <option value="30">30 jours</option>
-        <option value="90">3 mois</option>
-        <option value="180">6 mois</option>
-        <option value="365">1 année</option>
-        <option value="all">Tout</option>
-      </select>
-    </div>
-    <div style="min-width:220px">
-      <label class="muted" style="display:block;margin-bottom:6px">Type</label>
-      <select id="notifType">
-        <option value="">Tous</option>
-        <option value="WORKORDER_UPDATED">Modif réparation</option>
-        <option value="WORKORDER_STATUS">Changement statut</option>
-        <option value="WORKORDER_APPROVED">Validation admin</option>
-        <option value="INVOICE_UPDATED">Modif facture</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="table-wrap" style="margin-top:10px">
-    <table>
-      <thead><tr>
-        <th>Date</th><th>Type</th><th>Détails</th><th></th>
-      </tr></thead>
-      <tbody id="notifLogsTbody">
-        <tr><td class="muted" colspan="4">Chargement…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<!-- CLIENTS -->
-<section class="card" id="viewClients" style="display:none">
-<div class="row-between">
-<div class="row" style="gap:12px">
-<h2 style="margin:0">Clients</h2>
-<span class="muted" id="clientsCount"></span>
-</div>
-<button class="btn btn-primary" data-role="admin" id="btnNewClient2">+ Ajouter</button>
-</div>
-<div class="divider"></div>
-<form class="form form-inline" onsubmit="return false;">
-<input id="clientsSearch" placeholder="Rechercher (nom / téléphone / email)">
-<button class="btn btn-primary" id="btnClientsSearch">Rechercher</button>
-<button class="btn btn-ghost" id="btnClientsClear">Effacer</button>
-</input></form>
-
-
-<div class="row-between" data-role="admin" style="margin:6px 0">
-  <div class="row" style="gap:10px; flex-wrap:wrap">
-    <span class="muted">Sélection promo:</span>
-    <span class="muted" id="promoSelCount">0 sélectionné(s)</span>
-  </div>
-  <div class="row" style="gap:8px; flex-wrap:wrap">
-    <button class="btn btn-small btn-ghost" id="btnPromoSelectAll" type="button">Tout sélectionner</button>
-    <button class="btn btn-small btn-ghost" id="btnPromoSelectHasEmail" type="button">Sélectionner ceux avec email</button>
-    <button class="btn btn-small btn-ghost" id="btnPromoSelectNone" type="button">Tout désélectionner</button>
-  </div>
-</div>
-<div class="divider"></div>
-<div class="divider"></div>
-<div class="table-wrap">
-<div class="table-wrap desktop-only">
-  <table>
-    <thead><tr><th>Nom</th><th>Téléphone</th><th>Email</th><th>Promo</th><th></th></tr></thead>
-    <tbody id="clientsTbody"></tbody>
-  </table>
-</div>
-<div id="clientsCards" class="client-cards mobile-only"></div>
-</div>
-</section>
-<!-- REPAIRS -->
-<section class="card" id="viewRepairs" style="display:none">
-<div class="row-between">
-<div class="row" style="gap:12px">
-<h2 style="margin:0">Réparations</h2>
-<span class="muted" id="repairsCount"></span>
-</div>
-<button class="btn btn-primary" data-role="admin" id="btnNewRepair2">+ Nouvelle</button>
-</div>
-<div class="divider"></div>
-<form class="form form-inline" onsubmit="return false;">
-<input id="repairsSearch" placeholder="Nom / Téléphone / Plaque">
-<select id="repairsStatus">
-<option value="">Tous statuts</option>
-<option value="OUVERT">Ouvert</option>
-<option value="EN_COURS">En cours</option>
-<option value="TERMINE">Terminé</option>
-</select>
-<button class="btn btn-primary" id="btnRepairsFilter">Filtrer</button>
-<button class="btn btn-ghost" id="btnRepairsClear">Effacer</button>
-</input></form>
-<div class="divider"></div>
-<div class="table-wrap">
-  <div class="desktop-only">
-    <table>
-      <thead><tr><th>Date</th><th>Client</th><th>Réparation</th><th>Statut</th><th>Total TTC</th><th></th></tr></thead>
-      <tbody id="repairsTbody"></tbody>
-    </table>
-  </div>
-  <div id="repairsCards" class="repair-cards mobile-only"></div>
-</div>
- </section>
-
-<section class="card" id="viewRevenue" style="display:none">
-
-<div class="rev-head">
-  <div class="rev-title">
-    <h2>Revenus &amp; factures</h2>
-    <div class="muted">Filtre par jour, mois ou période personnalisée.</div>
-  </div>
-
-  <div class="rev-filters">
-    <div class="rev-field">
-      <div class="rev-label">Filtre</div>
-      <select class="input" id="revPreset">
-<option value="today">Aujourd’hui</option>
-<option selected="" value="month">Ce mois</option>
-<option value="custom">Personnalisé</option>
-</select>
-    </div>
-
-    <div class="rev-field">
-      <div class="rev-label">Du</div>
-      <input class="input" id="revFrom" type="date"/>
-    </div>
-
-    <div class="rev-field">
-      <div class="rev-label">Au</div>
-      <input class="input" id="revTo" type="date"/>
-    </div>
-
-    <div class="rev-field">
-      <div class="rev-label">Paiement</div>
-      <select class="input" id="revPayFilter">
-    <option value="">Tous</option>
-    <option value="cash">Cash</option>
-    <option value="card">Carte</option>
-    <option value="etransfer">Interac</option>
-    <option value="bank">Virement</option>
-    <option value="cheque">Chèque</option>
-    <option value="other">Autre</option>
+  <select id="themeSelector" class="theme-btn">
+    <option value="glass">Glassmorphism</option>
+    <option value="dark">Neon Dark</option>
+    <option value="material">Material Design</option>
+    <option value="simple">Minimaliste</option>
+    <option value="taxi">Taxi Branding</option>
   </select>
+
+  <p>Réservez votre taxi en quelques secondes</p>
+</header>
+
+<div class="container">
+  <h2>Réservation</h2>
+
+  <form id="reservationForm">
+    <div class="input-group">
+      <i class="fa fa-user"></i>
+      <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
     </div>
 
-    <div class="rev-actions">
-      <button class="btn" id="btnRevApply">Appliquer</button>
-      <button class="btn btn-ghost" id="btnRevExport">Exporter CSV</button>
-    </div>
-  </div>
-</div>
-
-<div class="grid rev-kpis">
-<div class="box">
-<div class="muted">Total période</div>
-<div class="val" id="revTotal">$0.00</div>
-</div>
-<div class="box">
-<div class="muted">Factures</div>
-<div class="val" id="revCount">0</div>
-</div>
-<div class="box">
-<div class="muted">Moyenne / facture</div>
-<div class="val" id="revAvg">$0.00</div>
-</div>
-<div class="box">
-<div class="muted">Coût pièces</div>
-<div class="val" id="revPartsCost">$0.00</div>
-</div>
-<div class="box">
-<div class="muted">Bénéfice</div>
-<div class="val" id="revProfit">$0.00</div>
-</div>
-</div>
-
-<div class="rev-table-wrap desktop-only">
-<table class="table">
-<thead>
-<tr>
-<th># Facture</th>
-<th>Date</th>
-<th>Client</th>
-<th>Réparation</th>
-<th>Paiement</th>
-<th style="text-align:right">Total</th>
-<th style="text-align:right">Coût pièces</th>
-<th style="text-align:right">Bénéfice</th>
-<th class="no-print">Actions</th>
-</tr>
-</thead>
-<tbody id="revTbody">
-<tr><td class="muted" colspan="9">Aucune facture.</td></tr>
-</tbody>
-</table>
-</div>
-
-<div id="revCards" class="rev-cards mobile-only"></div>
-
-<div class="divider"></div>
-<div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px">
-  <div class="box">
-    <h3 style="margin-top:0">Par méthode de paiement</h3>
-    <div class="desktop-only" style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Méthode</th>
-            <th style="text-align:right">Total</th>
-            <th style="text-align:right">Coût pièces</th>
-            <th style="text-align:right">Bénéfice</th>
-          </tr>
-        </thead>
-        <tbody id="revByPayTbody">
-          <tr><td class="muted" colspan="4">Aucune donnée.</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div id="revByPayCards" class="stat-cards mobile-only"></div>
-  </div>
-  <div class="box">
-    <h3 style="margin-top:0">Par date</h3>
-    <div class="muted" style="margin-bottom:8px">Somme par jour (selon filtre).</div>
-    <div class="desktop-only" style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th style="text-align:right">Total</th>
-            <th style="text-align:right">Coût pièces</th>
-            <th style="text-align:right">Bénéfice</th>
-          </tr>
-        </thead>
-        <tbody id="revByDateTbody">
-          <tr><td class="muted" colspan="4">Aucune donnée.</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div id="revByDateCards" class="stat-cards mobile-only"></div>
-  </div>
-</div>
-
-</section>
-
-<!-- FACTURES PIECES (Bénéfice) -->
-
-<section class="card" id="viewFiscal" style="display:none">
-  <div class="row" style="justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
-    <div>
-      <h2 style="margin:0 0 6px 0">Info fiscaux</h2>
-      <div class="muted">Résumé fiscal basé sur les factures pièces (revenus, dépenses, taxes et bénéfices).</div>
+    <div class="input-group">
+      <i class="fa fa-phone"></i>
+      <input type="tel" id="telephone" name="telephone" placeholder="514-123-4567" required>
     </div>
 
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <div>
-        <div class="muted" style="font-size:12px;margin-bottom:4px">Période</div>
-        <select class="input" id="fiscPreset" style="min-width:170px">
-          <option value="month">Ce mois</option>
-          <option value="3m">3 mois</option>
-          <option value="6m">6 mois</option>
-          <option value="12m">1 année</option>
-          <option value="custom">Personnalisé</option>
-        </select>
-      </div>
+    <div class="input-group">
+      <i class="fa fa-envelope"></i>
+      <input type="email" id="email" name="email" placeholder="Votre email" required>
+    </div>
 
-      <div>
-        <div class="muted" style="font-size:12px;margin-bottom:4px">Du</div>
-        <input class="input" id="fiscFrom" type="date"/>
-      </div>
-      <div>
-        <div class="muted" style="font-size:12px;margin-bottom:4px">Au</div>
-        <input class="input" id="fiscTo" type="date"/>
-      </div>
+    <div class="input-group">
+      <i class="fa fa-users"></i>
+      <input type="number" name="passagers" id="passagers" placeholder="Nombre de personnes" min="1" value="1" required>
+    </div>
 
-      <div>
-        <div class="muted" style="font-size:12px;margin-bottom:4px">Paiement</div>
-        <select class="input" id="fiscPayFilter" style="min-width:170px">
-          <option value="">Tous</option>
-          <option value="cash">Cash</option>
-          <option value="card">Carte</option>
-          <option value="etransfer">Interac</option>
-          <option value="bank">Virement</option>
-          <option value="cheque">Chèque</option>
-          <option value="other">Autre</option>
-        </select>
-      </div>
+    <div class="input-group">
+      <i class="fa fa-plane"></i>
+      <input type="text" id="numeroVol" name="numero_vol" placeholder="Numéro de vol (optionnel)">
+    </div>
 
-      <div>
-        <div class="muted" style="font-size:12px;margin-bottom:4px">Paiement achats</div>
-        <select class="input" id="fiscPurchasePayFilter" style="min-width:170px">
-          <option value="">Tous</option>
-          <option value="cash">Cash</option>
-          <option value="card">Carte</option>
-          <option value="etransfer">Interac</option>
-          <option value="bank">Virement</option>
-          <option value="cheque">Chèque</option>
-          <option value="other">Autre</option>
-        </select>
+    <div class="input-group">
+      <i class="fa fa-map-marker-alt"></i>
+      <div style="width:100%; position:relative;">
+        <input type="text" id="depart" name="depart" placeholder="Adresse de départ" required autocomplete="off">
+        <div id="depart-results" class="autocomplete"></div>
       </div>
     </div>
-  </div>
 
-  <div class="grid-4" style="margin-top:14px">
-    <div class="box">
-      <div class="muted">Revenus (TTC)</div>
-      <div class="val" id="fiscRevenue">—</div>
-      <div class="muted" style="font-size:12px">Nombre de factures: <span id="fiscCount">0</span></div>
+    <div class="input-group">
+      <i class="fa fa-map-marker-alt"></i>
+      <div style="width:100%; position:relative;">
+        <input type="text" id="arrivee" name="arrivee" placeholder="Adresse d'arrivée" required autocomplete="off">
+        <div id="arrivee-results" class="autocomplete"></div>
+      </div>
     </div>
-    <div class="box">
-      <div class="muted">Dépenses (coût pièces)</div>
-      <div class="val" id="fiscExpenses">—</div>
-      <div class="muted" style="font-size:12px">Basé sur Dépenses pièces (achats)</div>
-    </div>
-    <div class="box">
-      <div class="muted">Bénéfice</div>
-      <div class="val" id="fiscProfit">—</div>
-      <div class="muted" style="font-size:12px">Revenus − dépenses</div>
-    </div>
-    <div class="box">
-      <div class="muted">Taxes collectées</div>
-      <div class="val" id="fiscTaxCollected">—</div>
-      <div class="muted" style="font-size:12px">TPS: <span id="fiscTPSCollected">—</span> • TVQ: <span id="fiscTVQCollected">—</span></div>
-      <div class="muted" style="font-size:12px">Basé sur totals.taxTotal</div>
-    </div>
-  </div>
 
-  <div class="grid-3" style="margin-top:12px">
-    <div class="box">
-      <div class="muted">Taxes sur achats</div>
-      <div class="val" id="fiscTaxPaid">—</div>
-      <div class="muted" style="font-size:12px">TPS: <span id="fiscTPSPaid">—</span> • TVQ: <span id="fiscTVQPaid">—</span></div>
-      <div class="muted" style="font-size:12px">Basé sur Dépenses pièces (TPS+TVQ)</div>
+    <div class="input-group">
+      <i class="fa fa-clock"></i>
+      <input type="datetime-local" id="heure" name="heure" required>
     </div>
-    <div class="box">
-      <div class="muted">Taxes à payer (est.)</div>
-      <div class="val" id="fiscTaxPayable">—</div>
-      <div class="muted" style="font-size:12px">Taxes collectées − taxes achats</div>
-    </div>
-    <div class="box">
-      <div class="muted">Résultat net (après taxes est.)</div>
-      <div class="val" id="fiscNetAfterTax">—</div>
-      <div class="muted" style="font-size:12px">Bénéfice − taxes à payer</div>
-    </div>
-  </div>
 
-  <div class="divider" style="margin:14px 0"></div>
-
-  <div class="row" style="justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
-    <div>
-      <h3 style="margin:0 0 6px 0">Détails (factures)</h3>
-      <div class="muted">Liste filtrée utilisée pour les calculs fiscaux.</div>
-    </div>
-    <div class="row" style="gap:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost" id="btnFiscExportCsv">Exporter CSV</button>
-      <button class="btn" id="btnFiscExportComptable">Rapport comptable (CSV)</button>
-      <button class="btn btn-ghost" id="btnFiscExportComptablePdf">Rapport comptable (PDF)</button>
-    </div>
-  </div>
-
-  <div class="table-wrap" style="margin-top:10px">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Réf</th>
-          <th>Fournisseur</th>
-          <th>Client</th>
-          <th>Paiement</th>
-          <th style="text-align:right">Taxes</th>
-          <th style="text-align:right">Total</th>
-          <th style="text-align:right">Coût</th>
-          <th style="text-align:right">Bénéfice</th>
-        </tr>
-      </thead>
-      <tbody id="fiscTbody"></tbody>
-    </table>
-  </div>
-</section>
-
-<!-- DEPENSES PIECES (achats fournisseurs) -->
-<section class="card" id="viewPartsExpenses" style="display:none">
-  <div class="row-between" style="align-items:flex-end; gap:12px; flex-wrap:wrap">
-    <div>
-      <h2 style="margin:0 0 6px 0">Dépenses pièces</h2>
-      <div class="muted">Enregistre tes achats de pièces pour calculer exactement les taxes payées (TPS/TVQ) et le bénéfice hors taxes.</div>
-    </div>
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <button class="btn btn-primary" id="btnNewPartsExpense" data-role="admin">+ Nouvelle dépense</button>
-      <button class="btn btn-ghost" id="btnPartsExpExport" data-role="admin">Exporter CSV</button>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-    <div>
-      <div class="muted" style="font-size:12px;margin-bottom:4px">Période</div>
-      <select class="input" id="pexPreset" style="min-width:170px">
-        <option value="month">Ce mois</option>
-        <option value="3m">3 mois</option>
-        <option value="6m">6 mois</option>
-        <option value="12m">1 année</option>
-        <option value="custom">Personnalisé</option>
+    <div class="input-group">
+      <i class="fa fa-car"></i>
+      <select name="vehicule" id="vehicule">
+        <option value="berline">Berline</option>
+        <option value="van">Van</option>
       </select>
     </div>
-    <div>
-      <div class="muted" style="font-size:12px;margin-bottom:4px">Du</div>
-      <input class="input" id="pexFrom" type="date"/>
+
+    <div class="input-group">
+      <i class="fa fa-suitcase"></i>
+      <input type="number" name="valises" id="valises" placeholder="Nombre de valises" min="0" value="0">
     </div>
-    <div>
-      <div class="muted" style="font-size:12px;margin-bottom:4px">Au</div>
-      <input class="input" id="pexTo" type="date"/>
+
+    <div class="input-group textarea-group">
+      <i class="fa fa-note-sticky"></i>
+      <textarea id="notes" name="notes" rows="4" placeholder="Notes / instructions pour le chauffeur : terminal, porte, siège bébé, bagages spéciaux..."></textarea>
     </div>
-    <div>
-      <div class="muted" style="font-size:12px;margin-bottom:4px">Paiement</div>
-      <select class="input" id="pexPayFilter" style="min-width:170px">
-        <option value="">Tous</option>
-        <option value="cash">Cash</option>
-        <option value="card">Carte</option>
-        <option value="etransfer">Interac</option>
-        <option value="bank">Virement</option>
-        <option value="cheque">Chèque</option>
-        <option value="other">Autre</option>
-      </select>
+
+    <div class="input-group">
+      <i class="fa fa-exchange-alt"></i>
+      <label class="checkbox-line">
+        <input type="checkbox" id="allerRetour" name="aller_retour" value="oui">
+        Réserver un aller-retour
+      </label>
     </div>
-  </div>
 
-  <div class="grid-4" style="margin-top:14px">
-    <div class="box"><div class="muted">Achats HT</div><div class="val" id="pexSubtotal">—</div></div>
-    <div class="box"><div class="muted">Taxes payées (TPS+TVQ)</div><div class="val" id="pexTax">—</div></div>
-    <div class="box"><div class="muted">Achats TTC</div><div class="val" id="pexTotal">—</div></div>
-    <div class="box"><div class="muted">Nombre</div><div class="val" id="pexCount">0</div></div>
-  </div>
+    <div id="retourFields" class="hidden retour-box">
+      <h3>Informations retour</h3>
 
-  <div class="table-wrap" style="margin-top:12px">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Fournisseur</th>
-          <th>Description</th>
-          <th>Paiement</th>
-          <th style="text-align:right">HT</th>
-          <th style="text-align:right">TPS</th>
-          <th style="text-align:right">TVQ</th>
-          <th style="text-align:right">Taxes</th>
-          <th style="text-align:right">TTC</th>
-          <th class="no-print">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="pexTbody"><tr><td class="muted" colspan="8">Aucune dépense.</td></tr></tbody>
-    </table>
-  </div>
-</section>
-
-<!-- FOURNISSEURS -->
-<section class="card" id="viewSuppliers" style="display:none">
-  <div class="row-between" style="align-items:flex-end; gap:12px; flex-wrap:wrap">
-    <div>
-      <h2 style="margin:0 0 6px 0">Fournisseurs</h2>
-      <div class="muted">Gère la liste de tes fournisseurs pour les achats de pièces et les dépenses.</div>
-    </div>
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <button class="btn btn-primary" id="btnNewSupplier" data-role="admin">+ Nouveau fournisseur</button>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="grid-4">
-    <div class="box"><div class="muted">Fournisseurs</div><div class="val" id="suppliersCount">0</div></div>
-    <div class="box"><div class="muted">Actifs</div><div class="val" id="suppliersActiveCount">0</div></div>
-    <div class="box"><div class="muted">Téléphones</div><div class="val" id="suppliersPhoneCount">0</div></div>
-    <div class="box"><div class="muted">Emails</div><div class="val" id="suppliersEmailCount">0</div></div>
-  </div>
-
-  <div class="table-wrap" style="margin-top:12px">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Contact</th>
-          <th>Téléphone</th>
-          <th>Email</th>
-          <th>Ville</th>
-          <th>Note</th>
-          <th class="no-print">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="suppliersTbody"><tr><td class="muted" colspan="7">Aucun fournisseur.</td></tr></tbody>
-    </table>
-  </div>
-</section>
-
-<section class="card" id="viewInvoices" style="display:none">
-  <div class="row-between" style="align-items:flex-end; gap:12px; flex-wrap:wrap">
-    <div>
-      <h2 style="margin:0 0 6px 0">Factures pièces & bénéfice</h2>
-      <div class="muted">Ajoute les factures de pièces (coût) et le prix facturé au client pour voir ton bénéfice.</div>
-    </div>
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <button class="btn btn-primary" id="btnNewInvoice" data-role="admin">Nouvelle facture</button>
-    
-    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
-      <div>
-        <label class="muted" style="display:block;font-size:12px">Du</label>
-        <input class="input input-mini" id="invFrom" type="date">
-      </div>
-      <div>
-        <label class="muted" style="display:block;font-size:12px">Au</label>
-        <input class="input input-mini" id="invTo" type="date">
-      </div>
-      <div class="row" style="gap:8px; align-items:flex-end">
-        <button class="btn btn-ghost" id="btnInvThisMonth" type="button">Ce mois</button>
-        <button class="btn btn-ghost" id="btnInvLastMonth" type="button">Mois dernier</button>
-        <button class="btn btn-ghost" id="btnInvAll" type="button">Tout</button>
-      </div>
-      <button class="btn" id="btnInvExport" type="button">Exporter CSV</button>
-    </div>
-</div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Form -->
-  <div class="box" id="invoiceFormBox" style="display:none">
-    <h3 style="margin-top:0">Nouvelle facture</h3>
-    <form class="form" id="formInvoice">
-      <div class="grid" style="grid-template-columns: repeat(10, minmax(0,1fr)); gap:12px">
-        <div>
-          <label>Client</label>
-          <select class="input" id="invCustomer" required></select>
+      <div class="input-group">
+        <i class="fa fa-map-marker-alt"></i>
+        <div style="width:100%; position:relative;">
+          <input type="text" id="retourDepart" name="retour_depart" placeholder="Adresse de départ retour" autocomplete="off">
+          <div id="retour-depart-results" class="autocomplete"></div>
         </div>
-        <div>
-          <label>Email client (optionnel)</label>
-          <input class="input" id="invEmail" placeholder="client@email.com" />
-        </div>
-        <div>
-          <label>Fournisseur</label>
-          <select class="input" id="invSupplier">
-            <option value="">— Aucun —</option>
-          </select>
-        </div>
-        <div>
-          <label>Date</label>
-          <input class="input" id="invDate" type="date" required />
-        </div>
-        <div>
-          <label>Date d'achat pièce</label>
-          <input class="input" id="invPurchaseDate" type="date" />
-        </div>
-        <div>
-          <label>Date d'installation</label>
-          <input class="input" id="invInstallDate" type="date" />
-        </div>
-
-        <div>
-          <label># Référence (optionnel)</label>
-          <input class="input" id="invRef" placeholder="ex: INV-1001" />
-        
-        <div>
-          <label>Réparation (optionnel)</label>
-          <select class="input" id="invWorkorder">
-            <option value="">— Aucune —</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Méthode de paiement</label>
-          <select class="input" id="invPayMethod" required>
-            <option value="cash">Cash</option>
-            <option value="card">Carte</option>
-            <option value="etransfer">Virement Interac</option>
-            <option value="bank">Virement bancaire</option>
-            <option value="cheque">Chèque</option>
-            <option value="other">Autre</option>
-          </select>
-        </div>
-        <div>
-          <label>Heures main-d’œuvre</label>
-          <input class="input" id="invHours" type="number" step="0.25" min="0" value="0" />
-          <small class="muted">Heures × tarif ($/h) dans Paramètres.</small>
-        </div>
-        <div>
-          <label>Main-d’œuvre ($) (auto)</label>
-          <input class="input" id="invLabor" type="number" step="0.01" min="0" value="0" readonly />
-        </div>
-
-</div>
       </div>
 
-      <div class="divider"></div>
-
-      <div style="overflow:auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th style="width:90px">Qté</th>
-              <th style="width:130px;text-align:right">Coût ($)</th>
-              <th style="width:130px;text-align:right">Prix client ($)</th>
-              <th class="no-print" style="width:40px"></th>
-            </tr>
-          </thead>
-          <tbody id="invItemsTbody"></tbody>
-        </table>
-      </div>
-
-      <div class="row-between" style="margin-top:10px; gap:12px; flex-wrap:wrap">
-        <button class="btn" id="btnInvAddLine" type="button">+ Ajouter une ligne</button>
-        
-        <div class="row" style="gap:16px; flex-wrap:wrap">
-          <div class="muted">Sous-total: <b id="invSubTotal">$0.00</b></div>
-          <div class="muted">TPS: <b id="invTpsTotal">$0.00</b></div>
-          <div class="muted">TVQ: <b id="invTvqTotal">$0.00</b></div>
-          <div class="muted">Taxes (TPS+TVQ): <b id="invTaxTotal">$0.00</b></div>
-          <div class="muted">Total client: <b id="invGrandTotal">$0.00</b></div>
-          <div class="muted">Frais carte: <b id="invCardFee">$0.00</b></div>
-          <div class="muted">Coût pièces: <b id="invCostTotal">$0.00</b></div>
-          <div class="muted">Bénéfice net: <b id="invNetProfit">$0.00</b></div>
+      <div class="input-group">
+        <i class="fa fa-map-marker-alt"></i>
+        <div style="width:100%; position:relative;">
+          <input type="text" id="retourArrivee" name="retour_arrivee" placeholder="Adresse d'arrivée retour" autocomplete="off">
+          <div id="retour-arrivee-results" class="autocomplete"></div>
         </div>
-
       </div>
 
-      <div class="row" style="gap:10px; margin-top:12px; flex-wrap:wrap">
-        <button class="btn btn-primary" type="submit">Enregistrer</button>
-        <button class="btn btn-ghost" id="btnInvPrint" type="button">Imprimer / PDF</button>
-        <button class="btn btn-ghost" id="btnInvPdf" type="button">Télécharger PDF</button>
-        <button class="btn btn-ghost" id="btnInvEmail" type="button">Envoyer par email</button>
-        <button class="btn btn-ghost" id="btnInvCancel" type="button">Annuler</button>
+      <div class="input-group">
+        <i class="fa fa-clock"></i>
+        <input type="datetime-local" id="retourHeure" name="retour_heure">
       </div>
-    </form>
-  </div>
 
-  <!-- Summary -->
-  <div class="grid" style="grid-template-columns: repeat(10, minmax(0,1fr)); gap:12px; margin-top:14px">
-    <div class="box">
-      <div class="muted">Factures (30 derniers jours)</div>
-      <div class="val" id="inv30Count">0</div>
-    </div>
-    <div class="box">
-      <div class="muted">Bénéfice (30 jours)</div>
-      <div class="val" id="inv30Profit">$0.00</div>
-    </div>
-    <div class="box">
-      <div class="muted">Marge moyenne</div>
-      <div class="val" id="inv30Margin">0%</div>
-    </div>
-  </div>
+      <div class="input-group">
+        <i class="fa fa-plane"></i>
+        <input type="text" id="retourNumeroVol" name="retour_numero_vol" placeholder="Numéro de vol retour (optionnel)">
+      </div>
 
-  <div style="margin-top:14px; overflow:auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th># Réf</th>
-          <th>Client</th>
-          <th>Paiement</th>
-          <th style="text-align:right">Sous-total (HT)</th>
-          <th style="text-align:right">TPS</th>
-          <th style="text-align:right">TVQ</th>
-          <th style="text-align:right">Total client (TTC)</th>
-          <th style="text-align:right">Coût</th>
-          <th style="text-align:right">Bénéfice net</th>
-          <th class="no-print">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="invListTbody">
-        <tr><td class="muted" colspan="11">Aucune facture.</td></tr>
-      </tbody>
-    </table>
-  
-  <div class="divider"></div>
-
-  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px">
-    <div class="box">
-      <h3 style="margin-top:0">Bénéfice par client (Top 10)</h3>
-      <div style="overflow:auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th style="text-align:right">Facturé</th>
-              <th style="text-align:right">Coût</th>
-              <th style="text-align:right">Bénéfice</th>
-              <th style="text-align:right">Marge</th>
-            </tr>
-          </thead>
-          <tbody id="invTopClientsTbody">
-            <tr><td class="muted" colspan="5">Aucune donnée.</td></tr>
-          </tbody>
-        </table>
+      <div class="input-group textarea-group">
+        <i class="fa fa-comment"></i>
+        <textarea id="retourDetails" name="retour_details" rows="4" placeholder="Infos utiles retour : terminal, porte, heure d'atterrissage, lieu de rencontre..."></textarea>
       </div>
     </div>
 
-    <div class="box">
-      <h3 style="margin-top:0">Bénéfice par mois</h3>
-      <div id="invMonthlyChart" class="muted" style="margin:6px 0 10px 0">—</div>
-      <div style="overflow:auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Mois</th>
-              <th style="text-align:right">Facturé</th>
-              <th style="text-align:right">Coût</th>
-              <th style="text-align:right">Bénéfice</th>
-              <th style="text-align:right">Marge</th>
-            </tr>
-          </thead>
-          <tbody id="invMonthlyTbody">
-            <tr><td class="muted" colspan="5">Aucune donnée.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    <button type="submit" id="submitBtn">Réserver maintenant</button>
+    <p id="confirmation" class="hidden success-message"></p>
+  </form>
 </div>
 
-  <div class="box" style="margin-top:12px">
-    <h3 style="margin-top:0">Bénéfice par méthode de paiement</h3>
-    <div style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Méthode</th>
-            <th style="text-align:right">Facturé</th>
-            <th style="text-align:right">Coût</th>
-            <th style="text-align:right">Bénéfice</th>
-            <th style="text-align:right">Marge</th>
-          </tr>
-        </thead>
-        <tbody id="invPayTbody">
-          <tr><td class="muted" colspan="5">Aucune donnée.</td></tr>
-        </tbody>
-      </table>
-    
-  <div class="box" style="margin-top:12px">
-    <h3 style="margin-top:0">Bénéfice net par réparation (Top 10)</h3>
-    <div class="muted" style="margin-bottom:8px">Basé sur les factures liées à une réparation.</div>
-    <div style="overflow:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Réparation</th>
-            <th style="text-align:right">Total client</th>
-            <th style="text-align:right">Coût pièces</th>
-            <th style="text-align:right">Frais carte</th>
-            <th style="text-align:right">Bénéfice net</th>
-          </tr>
-        </thead>
-        <tbody id="invTopRepairsTbody">
-          <tr><td class="muted" colspan="5">Aucune donnée.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-  </div>
-</section>
+<button id="installBtn" class="install-btn" style="display:none;">📲 Ajouter à l'écran d'accueil</button>
 
-<!-- PROMOTIONS -->
-</section>
-
-<!-- PROMOTIONS -->
-<section class="card" id="viewPromotions" style="display:none">
-  <div class="row-between" style="align-items:flex-end; gap:12px; flex-wrap:wrap">
-    <div>
-      <h2 style="margin:0 0 6px 0">Promotions</h2>
-      <div class="muted">Créer une promotion et l’envoyer par email à tes clients.</div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="grid" style="grid-template-columns: 1.1fr .9fr; gap:12px">
-    <div class="box">
-      <h3 style="margin-top:0">Nouvelle promotion</h3>
-      <form class="form" id="formPromo">
-        <label>Objet (subject)</label>
-        <input name="subject" placeholder="Ex: -15% sur la main d’œuvre cette semaine" required />
-
-        <label>Message (email)</label>
-        <textarea name="message" rows="7" placeholder="Bonjour {name},\n\nVoici notre promo..." required></textarea>
-        <div class="muted" style="font-size:12px">Astuce: tu peux utiliser <code>{name}</code>, <code>{phone}</code>, <code>{garageName}</code>, <code>{garagePhone}</code>, <code>{garageEmail}</code> et <code>{garageAddress}</code>.</div>
-
-        <div class="row" style="gap:10px; flex-wrap:wrap">
-          <div style="min-width:190px; flex:1">
-            <label>Valable jusqu’au</label>
-            <input name="validUntil" type="date" />
-          </div>
-          <div style="min-width:190px; flex:1">
-            <label>Code promo (optionnel)</label>
-            <input name="code" placeholder="Ex: GARAGE15" />
-          </div>
-        </div>
-
-        <button class="btn btn-primary" type="submit">Enregistrer la promotion</button>
-        <div class="note" id="promoSaved" style="display:none; margin-top:10px"></div>
-      </form>
-    </div>
-
-    <div class="box">
-      <h3 style="margin-top:0">Envoi</h3>
-      <div class="muted">Envoi via la collection <code>mail</code>. Le message utilise automatiquement le nom, le logo et l'email du garage. Les réponses vont vers l'email du garage si ton système d'envoi prend en charge <code>replyTo</code>.</div>
-      <div class="divider"></div>
-      <label class="muted" style="font-size:12px">Email de test (optionnel)</label>
-      <input class="input" id="promoTestEmail" type="email" placeholder="ex: toi@gmail.com" />
-      <div class="muted" style="font-size:12px; margin-top:8px" id="promoAudienceInfo">Clients avec email: —</div>
-      <div class="divider"></div>
-      <button class="btn" id="btnPromoSend" disabled>Envoyer la promotion sélectionnée</button>
-      <div class="alert" id="promoSendError" style="display:none; margin-top:10px"></div>
-      <div class="note" id="promoSendOk" style="display:none; margin-top:10px"></div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <h3 style="margin:0 0 10px 0">Historique</h3>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Objet</th>
-          <th>Valide</th>
-          <th>Envoyé</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="promosTbody">
-        <tr><td class="muted" colspan="5">Chargement…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-<!-- SETTINGS -->
-<section class="card" id="viewSettings" style="display:none">
-<h2>Paramètres</h2>
-<p class="muted">TPS/TVQ sont enregistrées dans le cloud (pour ton compte).</p>
-<div class="divider"></div>
-<form class="form" onsubmit="return false;">
-<label>TPS (%)</label>
-<input id="setTps" inputmode="decimal" placeholder="5">
-<label>TVQ (%)</label>
-<input id="setTvq" inputmode="decimal" placeholder="9.975"/>
-<label>Frais carte (%)</label>
-<input id="setCardFee" inputmode="decimal" placeholder="2.5"/>
-<small class="muted">Appliqué seulement si paiement = Carte.</small>
-<label>Tarif main-d’œuvre ($/h)</label>
-<input id="setLaborRate" inputmode="decimal" placeholder="80"/>
-<small class="muted">Utilisé si tu mets des heures dans les factures.</small>
-
-<div class="divider"></div>
-<h3 style="margin-top:0">Infos garage (facture)</h3>
-<label>Nom du garage</label>
-<input id="setGarageName" class="input" placeholder="Garage Pro One" />
-<label>Adresse</label>
-<input id="setGarageAddress" class="input" placeholder="Montréal, QC" />
-<label>Téléphone</label>
-<input id="setGaragePhone" class="input" placeholder="(514) 000-0000" />
-<label>Email</label>
-<input id="setGarageEmail" class="input" placeholder="contact@garage.com" />
-<label>Numéro TPS</label>
-<input id="setGarageTpsNo" class="input" placeholder="123456789RT0001" />
-<label>Numéro TVQ</label>
-<input id="setGarageTvqNo" class="input" placeholder="1234567890TQ0001" />
-<label>Logo URL</label>
-<input id="setGarageLogoUrl" class="input" placeholder="https://..." />
-<div class="row" style="margin-top:10px">
-  <div>
-    <label>Uploader un logo</label>
-    <input id="setGarageLogoFile" type="file" accept="image/*" class="input" />
-    <small class="muted">PNG, JPG, WEBP. Le lien se remplit automatiquement après upload.</small>
-  </div>
-  <div>
-    <label>Aperçu logo</label>
-    <div style="display:flex;align-items:center;gap:12px;min-height:54px">
-      <img id="garageLogoPreview" src="assets/logo.png" alt="Aperçu logo" style="height:54px;width:54px;object-fit:cover;border-radius:10px;border:1px solid #d9e2ec;background:#fff" />
-      <button id="btnUploadGarageLogo" type="button" class="btn btn-secondary">📤 Uploader le logo</button>
-    </div>
-  </div>
-</div>
-<small class="muted">Tu peux coller un lien direct ou envoyer une image vers Firebase Storage.</small>
-<label>Nom pour signature</label>
-<input id="setSignatureName" class="input" placeholder="Nom du responsable" />
-<small class="muted">Ces infos s’affichent sur la facture PDF + dans l’email.</small>
-
-<div class="divider"></div>
-<h3 style="margin-top:0">Lien d'inscription</h3>
-<label>Site complet register</label>
-<div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-  <input id="registerLinkFull" class="input" readonly placeholder="Le lien register du garage s'affiche ici" style="flex:1;min-width:260px" />
-  <button id="btnCopyRegisterLink" type="button" class="btn btn-secondary">📋 Copier</button>
-</div>
-<small class="muted">Ce lien envoie directement vers la page register du garage actuel.</small>
-
-<div class="divider"></div>
-<h3 style="margin-top:0">Apparence</h3>
-<label>Thème</label>
-<select id="themeSelect" class="input">
-  <option value="light">Clair</option>
-  <option value="dark">Sombre</option>
-</select>
-<small class="muted">Par défaut, le thème est clair.</small>
-
-<div class="divider"></div>
-<h3 style="margin-top:0">Développeur</h3>
-<label>Mode développeur</label>
-<select id="devModeSelect" class="input">
-  <option value="off">OFF</option>
-  <option value="on">ON</option>
-</select>
-<small class="muted">Quand il est ON, une console de debug s'affiche en bas pour voir les erreurs.</small>
-
-<div class="row">
-<button class="btn btn-primary" id="btnSaveSettings">Enregistrer</button>
-</div>
-</input></form>
-
-<div class="divider"></div>
-<h3>Employés</h3>
-<div class="box">
-  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px">
-    <div>
-      <label>Email employé</label>
-      <input class="input" id="inviteEmail" placeholder="mecano@email.com" type="email"/>
-    </div>
-    <div>
-      <label>Rôle</label>
-      <select class="input" id="inviteRole">
-        <option value="mechanic">Mécanicien</option>
-        <option value="admin">Admin</option>
-      </select>
-    </div>
-  </div>
-  <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-    <button class="btn btn-primary" id="btnCreateInvite">Créer invitation</button>
-    <button class="btn btn-ghost" id="btnCopyInviteLink" style="display:none">Copier lien</button>
-    <button class="btn btn-ghost" id="btnSendInviteEmail" style="display:none">Envoyer email</button>
-    <span class="muted" id="inviteCreatedInfo"></span>
-  </div>
+<div id="iosBanner" style="display:none; position:fixed; bottom:10px; left:10px; right:10px; background:#FFCA28; color:#333; padding:10px; border-radius:10px; text-align:center; z-index:9999; font-weight:700;">
+  Pour ajouter Taxi Étoile à votre écran d'accueil : <br>
+  <span style="font-size:14px;">Appuyez sur le bouton Partager puis "Ajouter à l'écran d'accueil"</span>
+  <button id="closeIosBanner" style="margin-left:10px; padding:5px 10px;">OK</button>
 </div>
 
-<div class="box" style="margin-top:12px">
-  <h4 style="margin:0 0 8px 0">Invitations</h4>
-  <div style="overflow:auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Code</th><th>Email</th><th>Rôle</th><th>Utilisée</th><th>Créée</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="invitesTbody">
-        <tr><td class="muted" colspan="6">Aucune invitation.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="box" style="margin-top:12px">
-  <h4 style="margin:0 0 8px 0">Liste employés</h4>
-  <div style="overflow:auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="staffTbody">
-        <tr><td class="muted" colspan="5">Aucun employé.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="box" style="margin-top:12px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-    <h4 style="margin:0">Historique</h4>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select class="input" id="logsFilterType" style="max-width:220px">
-        <option value="">Tous</option>
-        <option value="invite_created">Invitation créée</option>
-        <option value="invite_email_sent">Invitation email envoyé</option>
-        <option value="account_created">Compte créé</option>
-        <option value="staff_role_changed">Rôle changé</option>
-        <option value="staff_disabled_changed">Statut employé</option>
-        <option value="workorder_status">Statut réparation</option>
-        <option value="invoice_saved">Facture sauvegardée</option>
-      </select>
-      <button class="btn btn-ghost btn-small" id="btnRefreshLogs">Rafraîchir</button>
-    </div>
-  </div>
-  <small class="muted">Admin voit tout. Mécanicien voit seulement ses actions.</small>
-  <div style="overflow:auto;margin-top:10px">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Date</th><th>Employé</th><th>Action</th><th>Détails</th>
-        </tr>
-      </thead>
-      <tbody id="logsTbody">
-        <tr><td class="muted" colspan="4">Aucun log.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="divider"></div>
-<h3>Sauvegarde</h3>
-<div class="row">
-<button class="btn btn-ghost" id="btnExport">Exporter (JSON)</button>
-<label class="btn btn-ghost" for="importFile" style="cursor:pointer">Importer (JSON)</label>
-<input accept="application/json" id="importFile" style="display:none" type="file"/>
-</div>
-<div class="divider"></div>
-<h3>Maintenance</h3>
-<div class="row">
-<button class="btn btn-danger" id="btnResetCloud">Tout supprimer (cloud)</button>
-</div>
-</section>
-</section>
-</main>
-<div id="toast" class="toast" style="display:none"></div>
-<footer class="footer no-print">
-<small>© <span id="year"></span> Garage Pro One — <span class="muted">Synchro Firebase</span></small>
-</footer>
-
-<div id="invPrintArea" class="print-area" style="display:none">
-  <div class="print-head">
-    <img id="print-logo-img" src="assets/logo.png" style="height:70px;margin-right:12px" />
-    <img data-garage-logo="true" src="assets/logo.png" alt="Logo garage" style="height:56px;width:56px;object-fit:contain;border-radius:12px;background:#111;padding:6px" />
-    <div>
-      <div style="font-size:20px;font-weight:800;line-height:1">Facture</div>
-      <div class="muted" id="printGarageLine"></div>
-    </div>
-  </div>
-
-  <div class="print-grid">
-    <div class="print-box">
-      <div class="muted">Garage</div>
-      <div style="font-weight:700" id="printGarageName"></div>
-      <div class="muted" id="printGarageAddress"></div>
-      <div class="muted" id="printGaragePhone"></div>
-      <div class="muted" id="printGarageEmail"></div>
-    </div>
-    <div class="print-box">
-      <div class="muted">Client</div>
-      <div style="font-weight:700" id="printClientName"></div>
-      <div class="muted" id="printInvoiceMeta"></div>
-    </div>
-  </div>
-
-  <div style="overflow:auto;margin-top:12px">
-    <table class="table" id="printItemsTable">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th style="width:90px">Qté</th>
-          <th style="width:130px;text-align:right">Prix</th>
-        </tr>
-      </thead>
-      <tbody id="printItemsTbody"></tbody>
-    </table>
-  </div>
-
-  <div class="print-totals">
-    <div></div>
-    <div class="print-box">
-      <div class="row-between"><span>Sous-total</span><b id="printSub">$0.00</b></div>
-      <div class="row-between muted"><span>Taxes</span><b id="printTax">$0.00</b></div>
-      <div class="row-between"><span>Total</span><b id="printGrand">$0.00</b></div>
-    </div>
-  </div>
-
-  <div style="margin-top:18px" class="print-box">
-    <div class="muted">Signature</div>
-    <div style="font-weight:700" id="printSignature"></div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div aria-hidden="true" class="modal-backdrop" id="modalBackdrop" inert="">
-<div class="modal">
-<div class="card">
-<div class="row-between">
-<h2 id="modalTitle" style="margin:0">Modal</h2>
-<button class="btn btn-ghost btn-small" id="btnModalClose">Fermer</button>
-</div>
-<div class="divider"></div>
-<div id="modalBody"></div>
-</div>
-</div>
-</div>
-
-<!-- Firebase (ORDER IMPORTANT) -->
-
-<div class="modal" id="clientStatsModal" style="display:none">
-  <div class="modal-card" style="max-width:720px">
-    <div class="modal-head">
-      <div>
-        <div style="font-weight:700" id="csTitle">Stats client</div>
-        <div class="muted" id="csSubtitle"></div>
-      </div>
-      <button class="btn btn-ghost" id="btnCloseClientStats">Fermer</button>
-    </div>
-    <div class="modal-body">
-      <div class="grid" style="grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px">
-        <div class="box"><div class="muted">Factures</div><div class="val" id="csCount">0</div></div>
-        <div class="box"><div class="muted">Total client</div><div class="val" id="csSales">$0.00</div></div>
-        <div class="box"><div class="muted">Coût pièces</div><div class="val" id="csParts">$0.00</div></div>
-        <div class="box"><div class="muted">Profit net</div><div class="val" id="csNet">$0.00</div></div>
-      </div>
-      <div class="divider"></div>
-      <h3 style="margin-top:0">Dernières factures</h3>
-      <div style="overflow:auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Réf</th>
-              <th>Date</th>
-              <th style="text-align:right">Total</th>
-              <th style="text-align:right">Profit net</th>
-            </tr>
-          </thead>
-          <tbody id="csTbody">
-            <tr><td class="muted" colspan="4">Aucune facture.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-  </main>
-</div>
-<script src="./assets/firebase-config.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script type="module" src="./assets/app.js"></script>
-
-<script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.js"></script>
-
-<!-- VIN SCAN MODAL -->
-<!-- VIN SCAN MODAL (overlay) -->
-<div aria-hidden="true" class="modal-backdrop" id="vinScanModal" inert style="display:none">
-  <div class="modal" style="width:min(720px, 100%)">
-    <div class="card">
-      <div class="row-between" style="gap:10px">
-        <h2 style="margin:0">Scanner VIN (code-barres)</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-ghost btn-small" id="btnToggleTorchVin" type="button" title="Lampe (si supportée)">Lampe</button>
-          <button class="btn btn-ghost btn-small" id="btnVinOcr" type="button" title="Lecture VIN par photo (beta)">Lire VIN (photo)</button>
-          <button class="btn btn-ghost btn-small" id="btnCloseVinScan" type="button">Fermer</button>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div id="vinScanViewport" class="vin-viewport"></div>
-      <small class="muted" style="display:block;margin-top:8px">
-        Astuce: vise le code‑barres VIN (pare‑brise ou porte). Si ça ne lit pas, augmente la lumière.
-      </small>
-      <small class="muted" style="display:block;margin-top:6px">
-        Mode PRO (beta): “Lire VIN (photo)” peut reconnaître le VIN même sans code‑barres, mais c’est plus lent.
-      </small>
-    </div>
-  </div>
-</div>
-
-<!-- PLATE SCAN MODAL (OCR via camera photo) -->
-<div aria-hidden="true" class="modal-backdrop" id="plateScanModal" inert style="display:none">
-  <div class="modal" style="width:min(720px, 100%)">
-    <div class="card">
-      <div class="row-between" style="gap:10px">
-        <h2 style="margin:0">Scanner plaque (caméra)</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-ghost btn-small" id="btnToggleTorchPlate" type="button" title="Lampe (si supportée)">Lampe</button>
-          <button class="btn btn-ghost btn-small" id="btnPlateOcr" type="button" title="Capture manuelle (si besoin)">Capture</button>
-          <button class="btn btn-ghost btn-small" id="btnClosePlateScan" type="button">Fermer</button>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div id="plateScanViewport" class="vin-viewport"></div>
-<div class="row-between" style="margin-top:10px;gap:10px">
-  <div class="muted" id="plateScanStatus">Prêt…</div>
-  <div class="muted" id="plateScanLast">—</div>
-</div>
-      <small class="muted" style="display:block;margin-top:8px">
-        Astuce: pointe la plaque dans le cadre. La lecture se fait automatiquement (Canada + USA).
-      </small>
-      <small class="muted" style="display:block;margin-top:6px">
-        Dès que la plaque est stable, elle est copiée dans la recherche rapide et la recherche se lance.
-      </small>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-<div id="devConsole" class="dev-console" style="display:none">
-  <div class="dev-console-head">
-    <strong>Console debug</strong>
-    <div class="dev-console-actions">
-      <button type="button" class="btn btn-small btn-ghost" id="btnToggleDevConsole">Réduire</button>
-      <button type="button" class="btn btn-small btn-ghost" id="btnClearDevConsole">Effacer</button>
-    </div>
-  </div>
-  <div id="devConsoleBody" class="dev-console-body"></div>
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

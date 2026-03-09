@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxi Étoile - À propos</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFCA28">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+
+<header class="hero">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="#FFD700">
+      <path d="M12 .587l3.668 7.431 8.21 1.194-5.938 5.788 1.402 8.172L12 18.896l-7.342 3.856 1.402-8.172L.122 9.212l8.21-1.194z"/>
+    </svg>
+    <h1>Taxi Étoile</h1>
+  </div>
+
+  <nav class="menu">
+    <a href="index.html">Réservation</a>
+    <a href="tarifs.html">Tarifs</a>
+    <a href="services.html">Services</a>
+    <a class="active" href="a-propos.html">À propos</a>
+    <a href="contact.html">Contact</a>
+    <a href="faq.html">FAQ</a>
+    <a href="galerie.html">Galerie</a>
+    <a href="politique-confidentialite.html">Confidentialité</a>
+    <a href="conditions.html">Conditions</a>
+  </nav>
+
+  <select id="themeSelector" class="theme-btn">
+    <option value="glass">Glassmorphism</option>
+    <option value="dark">Neon Dark</option>
+    <option value="material">Material Design</option>
+    <option value="simple">Minimaliste</option>
+    <option value="taxi">Taxi Branding</option>
+  </select>
+
+  <p>Apprenez-en plus sur notre mission et notre équipe</p>
+</header>
+
+<div class="container">
+
+  <h2>À propos de Taxi Étoile</h2>
+
+  <section class="about-box">
+    <h3><i class="fa fa-star"></i> Qui sommes-nous ?</h3>
+    <p>Taxi Étoile est une entreprise de transport montréalais dédiée à offrir un service rapide, fiable et sécuritaire. Depuis notre création, notre objectif est simple : offrir la meilleure expérience de taxi au Québec.</p>
+  </section>
+
+  <section class="about-box">
+    <h3><i class="fa fa-bullseye"></i> Notre Mission</h3>
+    <p>Notre mission est d'assurer un transport confortable, accessible et professionnel pour tous. Nous nous efforçons de toujours surpasser les attentes de nos clients.</p>
+  </section>
+
+  <section class="about-box">
+    <h3><i class="fa fa-users"></i> Notre Équipe</h3>
+    <p>Nos chauffeurs sont formés, courtois et expérimentés. Ils connaissent la ville parfaitement et suivent des procédures strictes pour assurer sécurité et ponctualité.</p>
+  </section>
+
+  <section class="about-box">
+    <h3><i class="fa fa-car-side"></i> Notre Flotte</h3>
+    <p>Nous disposons d’une flotte moderne comprenant des berlines, des minivans et des véhicules adaptés. Tous sont inspectés régulièrement.</p>
+  </section>
+
+</div>
+
+<!-- Bouton Installer PWA -->
+<button id="installBtn" class="install-btn" style="display:none;">
+  📲 Ajouter à l'écran d'accueil
+</button>
+
+<script>
+/* THEME SWITCHING */
+const selector = document.getElementById('themeSelector');
+selector.addEventListener('change', () => {
+  const theme = selector.value;
+  document.body.className = "";
+  document.body.classList.add("theme-" + theme);
+  localStorage.setItem("theme", theme);
+});
+const saved = localStorage.getItem("theme");
+if (saved) {
+  document.body.classList.add("theme-" + saved);
+  selector.value = saved;
+}
+
+/* PWA INSTALL BUTTON */
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+    deferredPrompt = null;
+});
+
+/* SERVICE WORKER */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' });
+}
+</script>
+
+</body>
+</html>

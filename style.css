@@ -1,0 +1,408 @@
+/* =======================
+   STYLE GLOBAL TAXI ÉTOILE
+   ======================= */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  background: #FFF8E1;
+  transition: background 0.3s, color 0.3s;
+  color: #333;
+}
+
+h1,h2,h3,h4,h5,h6 { margin: 0; }
+
+header.hero {
+  background: #FFCA28;
+  color: #333;
+  text-align: center;
+  padding: 2rem 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+header.hero .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+header.hero .logo svg { width:50px; height:50px; }
+
+header.hero nav.menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1rem 0;
+  gap: 10px;
+}
+
+header.hero nav.menu a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+header.hero nav.menu a.active,
+header.hero nav.menu a:hover {
+  background: #FFB300;
+  color: white;
+}
+
+.container {
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+input, select, button, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  border: 1px solid #FFC107;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #FFFDE7;
+  transition: 0.3s;
+}
+
+.input-group:focus-within { box-shadow: 0 0 10px #FFC107; }
+.input-group i { padding: 0 12px; color: #FFB300; font-size: 1.2rem; }
+.input-group input, .input-group select { flex: 1; border: none; padding: 12px; outline: none; background: transparent; }
+
+button {
+  width: 100%;
+  background: #FFB300;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover { background: #FFA000; }
+button:disabled { background: #ccc; cursor: not-allowed; }
+
+.prix, #confirmation { text-align: center; margin: 1rem 0; font-weight: 700; }
+
+.hidden { display: none; }
+
+@media(max-width:500px){ .container { margin:1rem; padding:1.5rem; } }
+
+/* =======================
+   THEMES
+   ======================= */
+body.theme-glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+body.theme-dark { background: #1a1a1a; color: #eee; }
+body.theme-material { background: #F5F5F5; color: #333; }
+body.theme-simple { background: #fff; color: #333; }
+body.theme-taxi { background: #FFF8E1; color: #333; }
+
+/* =======================
+   INSTALL BUTTON PWA
+   ======================= */
+.install-btn {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  background: #FFB300;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: 0.3s;
+  z-index: 1000;
+}
+
+.install-btn:hover { background: #FFA000; }
+
+/* =======================
+   GALERIE & CHAUFFEURS
+   ======================= */
+.gallery-grid, .driver-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 15px; }
+.gallery-grid img, .driver-card img { width: 100%; border-radius: 12px; object-fit: cover; }
+.gallery-grid img:hover, .driver-card:hover { transform: scale(1.05); transition: transform 0.3s; }
+
+.driver-card { background:#fff9e1; padding:15px; border-radius:12px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); transition:0.3s; }
+.driver-card h4 { margin:10px 0 5px; font-size:1.1rem; }
+.driver-card p { margin:0; font-size:0.9rem; color:#555; }
+
+.textarea-group {
+  align-items: flex-start;
+}
+
+.input-group textarea {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  outline: none;
+  background: transparent;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.checkbox-line {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  font-weight:600;
+  color:#333;
+  padding: 12px 8px 12px 0;
+}
+
+.checkbox-line input {
+  width:auto;
+  margin:0;
+}
+
+.retour-box {
+  margin-top: 12px;
+}
+
+.success-message {
+  color: #2e7d32;
+}
+
+.error-message {
+  color: #c62828;
+  font-weight: 700;
+  margin-top: 12px;
+}
+
+.small-muted {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.autocomplete {
+  position:absolute;
+  top:100%;
+  left:0;
+  right:0;
+  background:#fff;
+  border:1px solid #FFC107;
+  border-radius: 0 0 10px 10px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.12);
+  display:none;
+  z-index:100;
+  max-height:220px;
+  overflow:auto;
+}
+
+.autocomplete div {
+  padding:10px 12px;
+  cursor:pointer;
+}
+
+.autocomplete div:hover {
+  background:#fff4bf;
+}
+
+.dashboard-wrapper {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.dashboard-topbar,
+.dashboard-actions,
+.filters-grid,
+.stats-grid {
+  display:grid;
+  gap: 1rem;
+}
+
+.dashboard-topbar {
+  grid-template-columns: 1fr auto;
+  align-items:center;
+  margin-bottom: 1rem;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.stat-box {
+  background:#FFFDE7;
+  border:1px solid #FFC107;
+  border-radius:12px;
+  padding:1rem;
+}
+
+.stat-box span {
+  display:block;
+  color:#666;
+  margin-bottom:0.4rem;
+}
+
+.stat-box strong {
+  font-size:1.8rem;
+}
+
+.filters-grid {
+  grid-template-columns: 2fr 1fr;
+  margin-bottom: 1rem;
+}
+
+.dashboard-actions {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.secondary-btn {
+  background:#455A64;
+}
+
+.secondary-btn:hover {
+  background:#37474F;
+}
+
+.danger-btn {
+  background:#D32F2F;
+}
+
+.danger-btn:hover {
+  background:#B71C1C;
+}
+
+.small-btn {
+  width:auto;
+  padding:10px 12px;
+  font-size:14px;
+}
+
+.reservation-list {
+  display:grid;
+  gap:1rem;
+}
+
+.reservation-card {
+  border:1px solid #FFE082;
+  border-radius:14px;
+  padding:1rem;
+  background:#fffdf5;
+}
+
+.reservation-header {
+  display:flex;
+  justify-content:space-between;
+  gap:1rem;
+  align-items:flex-start;
+  margin-bottom:0.8rem;
+}
+
+.reservation-header p {
+  margin:0.25rem 0 0;
+  color:#666;
+}
+
+.reservation-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap:0.7rem;
+}
+
+.retour-summary {
+  margin-top:1rem;
+  padding-top:1rem;
+  border-top:1px dashed #FFCA28;
+}
+
+@media(max-width:700px){
+  .dashboard-topbar,
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-header {
+    flex-direction:column;
+  }
+}
+
+.status-select {
+  margin-top: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #FFC107;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.dashboard-topbar p {
+  margin: 0.3rem 0 0;
+}
+
+
+/* =======================
+   PWA / IPHONE APP MODE
+   ======================= */
+html {
+  background: #FFF8E1;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.standalone-app {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.standalone-app header.hero {
+  padding-top: calc(1.2rem + env(safe-area-inset-top));
+}
+
+.standalone-app .install-btn {
+  bottom: calc(15px + env(safe-area-inset-bottom));
+}
+
+#iosBanner {
+  bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 700px) {
+  header.hero nav.menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  header.hero nav.menu a {
+    text-align: center;
+    background: rgba(255,255,255,0.22);
+  }
+
+  .container,
+  .dashboard-wrapper {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
