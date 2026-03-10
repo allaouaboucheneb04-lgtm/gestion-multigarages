@@ -20,8 +20,8 @@
     .mini{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px;color:var(--muted)} .mini b{color:var(--text)}
     .hint,.error,.ok{margin-top:10px;padding:12px 14px;border-radius:14px;font-size:14px}.hint{background:#f8fafc;border:1px solid var(--line);color:var(--muted)}.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.ok{background:#ecfdf5;border:1px solid #bbf7d0;color:#166534}
     .small{font-size:12px;color:var(--muted)} .muted{color:var(--muted)} .list-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.page-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.page-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}.page-toggle input{width:auto;margin:0}.garage-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.chip{display:inline-flex;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:700}
-    @media (max-width:900px){.grid,.row,.row3{grid-template-columns:1fr}.wrap{padding:14px}h1{font-size:28px}}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.page-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.page-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff}.page-toggle input{width:auto;margin:0}.garage-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.chip{display:inline-flex;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:700}.qr-box{display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:start;margin-top:12px}.qr-preview{display:flex;align-items:center;justify-content:center;min-height:180px;background:#fff;border:1px dashed var(--line);border-radius:18px;padding:12px}.qr-preview canvas,.qr-preview img{max-width:100%;height:auto;display:block}.code-link{display:block;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#f8fafc;color:var(--text);word-break:break-all;font-size:13px;line-height:1.5}.qr-title{font-size:18px;font-weight:900}.qr-sub{margin-top:6px;color:var(--muted);font-size:14px}
+    @media (max-width:900px){.grid,.row,.row3,.qr-box{grid-template-columns:1fr}.wrap{padding:14px}h1{font-size:28px}}
   </style>
 </head>
 <body>
@@ -131,6 +131,30 @@
 
       <section class="card">
         <div class="section-title">
+          <h2 style="margin:0">QR code inscription garage</h2>
+          <div id="qrGarageLabel" class="small muted">Sélectionne un garage dans la liste.</div>
+        </div>
+        <div class="qr-box">
+          <div id="qrPreview" class="qr-preview"><div class="muted">Aucun QR code</div></div>
+          <div>
+            <div id="qrGarageName" class="qr-title">QR code garage</div>
+            <div class="qr-sub">Ce QR code ouvre directement la page d'inscription du garage sélectionné.</div>
+            <div style="margin-top:12px">
+              <label>Lien d'inscription</label>
+              <div id="qrRegisterUrl" class="code-link">-</div>
+            </div>
+            <div class="actions">
+              <button class="primary" id="btnDownloadQr" type="button">Télécharger QR</button>
+              <button class="ghost" id="btnCopyQrLink" type="button">Copier le lien</button>
+              <button class="ghost" id="btnCopyQrImage" type="button">Copier image</button>
+            </div>
+            <div class="hint">Astuce: utilise un QR différent pour chaque garage. Les employés scanneront puis arriveront automatiquement sur leur page register avec le bon <b>garageId</b>.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">
           <h2 style="margin:0">Liste des garages</h2>
           <div class="toolbar">
             <button class="ghost" id="btnReloadList" type="button">Actualiser</button>
@@ -146,6 +170,7 @@
     import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+    import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm';
 
     const app = initializeApp(window.FIREBASE_CONFIG);
     const auth = getAuth(app);
@@ -156,6 +181,7 @@
     let myStaff = null;
     let garagesCache = [];
     let selectedGarageIdForPages = "";
+    let selectedGarageIdForQr = "";
 
     const $ = (id) => document.getElementById(id);
     const slugify = (s='') => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
@@ -223,6 +249,65 @@
       setPagesFormState(packs[preset] || defaultEnabledPages);
     }
 
+    function getBaseRegisterUrl(){
+      const current = new URL('./register.html', window.location.href);
+      if(current.pathname.includes('/repairtest/')){
+        current.pathname = current.pathname.replace('/repairtest/register.html', '/register.html');
+      }
+      return current.toString();
+    }
+    function getGarageRegisterUrl(garageId){
+      const url = new URL(getBaseRegisterUrl());
+      url.searchParams.set('garageId', garageId);
+      return url.toString();
+    }
+    function setQrGarageLabel(text){ const el = $('qrGarageLabel'); if(el) el.textContent = text || ''; }
+    async function renderGarageQr(garageId){
+      selectedGarageIdForQr = garageId || '';
+      const preview = $('qrPreview');
+      const urlBox = $('qrRegisterUrl');
+      const nameBox = $('qrGarageName');
+      if(!selectedGarageIdForQr){
+        if(preview) preview.innerHTML = '<div class="muted">Aucun QR code</div>';
+        if(urlBox) urlBox.textContent = '-';
+        if(nameBox) nameBox.textContent = 'QR code garage';
+        setQrGarageLabel('Sélectionne un garage dans la liste.');
+        return;
+      }
+      const garage = garagesCache.find(g => g.id === selectedGarageIdForQr);
+      const url = getGarageRegisterUrl(selectedGarageIdForQr);
+      if(urlBox) urlBox.textContent = url;
+      if(nameBox) nameBox.textContent = `QR code — ${garage?.name || garage?.garageName || selectedGarageIdForQr}`;
+      setQrGarageLabel(`Garage sélectionné: ${garage?.name || garage?.garageName || selectedGarageIdForQr}`);
+      if(preview){
+        preview.innerHTML = '<canvas id="garageQrCanvas" width="320" height="320"></canvas>';
+        const canvas = $('garageQrCanvas');
+        await QRCode.toCanvas(canvas, url, { width: 320, margin: 2, errorCorrectionLevel: 'M' });
+      }
+    }
+    async function downloadGarageQr(){
+      if(!selectedGarageIdForQr){ setMsg('error', 'Sélectionne un garage pour télécharger son QR code.'); return; }
+      const canvas = $('garageQrCanvas');
+      if(!canvas){ setMsg('error', 'QR code introuvable.'); return; }
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `${selectedGarageIdForQr}-qr-register.png`;
+      link.click();
+    }
+    async function copyGarageQrLink(){
+      if(!selectedGarageIdForQr){ setMsg('error', 'Sélectionne un garage pour copier son lien.'); return; }
+      const url = getGarageRegisterUrl(selectedGarageIdForQr);
+      await navigator.clipboard.writeText(url);
+      setMsg('ok', 'Lien du QR code copié.');
+    }
+    async function copyGarageQrImage(){
+      if(!selectedGarageIdForQr){ setMsg('error', 'Sélectionne un garage pour copier son image QR.'); return; }
+      const canvas = $('garageQrCanvas');
+      if(!canvas || !navigator.clipboard || !window.ClipboardItem){ throw new Error('Copie image non supportée sur cet appareil.'); }
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      setMsg('ok', 'Image du QR code copiée.');
+    }
 
     function formData(){
       return {
@@ -339,6 +424,7 @@
           <div class="list-actions">
             <button class="ghost" data-action="edit" data-id="${g.id}">Modifier</button>
             <button class="ghost" data-action="pages" data-id="${g.id}">Pages</button>
+            <button class="ghost" data-action="qr" data-id="${g.id}">QR code</button>
             <button class="ghost" data-action="open" data-id="${g.id}">Ouvrir</button>
             <button class="danger" data-action="delete" data-id="${g.id}">Supprimer</button>
           </div>
@@ -351,6 +437,7 @@
           const garage = garagesCache.find(x => x.id === id);
           if(action === 'edit' && garage) return enterEditMode(garage);
           if(action === 'pages') return await loadGaragePages(id);
+          if(action === 'qr') return await renderGarageQr(id);
           if(action === 'open') return window.location.href = `./index.html?garageId=${encodeURIComponent(id)}`;
           if(action === 'delete') return await deleteGarage(id);
         });
@@ -467,6 +554,8 @@
         setMsg('ok', isEdit ? 'Garage modifié avec succès.' : 'Garage créé avec succès.');
         setPageStatus(isEdit ? 'Garage modifié avec succès' : 'Garage créé avec succès');
         await loadGarages();
+        await loadGaragePages(garageId);
+        await renderGarageQr(garageId);
         resetForm();
       }catch(e){
         console.error(e);
@@ -514,6 +603,9 @@ Attention: cela supprime seulement le document principal du garage. Les sous-col
     $('btnPagesAll').addEventListener('click', () => applyPagePreset('all'));
     $('btnPagesBasic').addEventListener('click', () => applyPagePreset('basic'));
     $('btnPagesPro').addEventListener('click', () => applyPagePreset('pro'));
+    $('btnDownloadQr').addEventListener('click', downloadGarageQr);
+    $('btnCopyQrLink').addEventListener('click', async () => { try { await copyGarageQrLink(); } catch(e){ console.error(e); setMsg('error', e?.message || 'Erreur copie lien QR.'); } });
+    $('btnCopyQrImage').addEventListener('click', async () => { try { await copyGarageQrImage(); } catch(e){ console.error(e); setMsg('error', e?.message || 'Erreur copie image QR.'); } });
     $('btnLogout').addEventListener('click', async () => {      try { await signOut(auth); window.location.replace('./index.html'); }
       catch(e){ console.error(e); setMsg('error', 'Erreur déconnexion.'); }
     });
@@ -530,6 +622,7 @@ Attention: cela supprime seulement le document principal du garage. Les sous-col
         resetForm();
         setPagesFormState(defaultEnabledPages);
         setPagesGarageLabel('Sélectionne un garage dans la liste.');
+        await renderGarageQr('');
         await loadGarages();
       }catch(e){
         console.error(e);
