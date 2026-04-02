@@ -6,6 +6,14 @@
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>Garage Pro One — Synchro iPhone + PC</title>
 <link href="./assets/style.css" rel="stylesheet"/>
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AB Garage Pro">
+<meta name="theme-color" content="#0b1d4a">
+
 </head>
 <body>
 <header class="topbar no-print">
@@ -1502,6 +1510,61 @@
   </div>
   <div id="devConsoleBody" class="dev-console-body"></div>
 </div>
+
+<script>
+(function() {
+  let deferredPrompt = null;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  function ensureInstallButton() {
+    if (document.getElementById('pwaInstallBtn')) return document.getElementById('pwaInstallBtn');
+    const btn = document.createElement('button');
+    btn.id = 'pwaInstallBtn';
+    btn.type = 'button';
+    btn.textContent = 'Installer l’app';
+    btn.setAttribute('aria-label', 'Installer l’application');
+    btn.style.cssText = [
+      'position:fixed','right:16px','bottom:16px','z-index:99999','padding:12px 16px',
+      'border:none','border-radius:999px','background:#0b1d4a','color:#fff','font-weight:700',
+      'box-shadow:0 10px 30px rgba(0,0,0,.25)','cursor:pointer','display:none'
+    ].join(';');
+    btn.addEventListener('click', async function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch (e) {}
+        deferredPrompt = null;
+        btn.style.display = 'none';
+      } else {
+        alert('Sur Android: ouvre le menu du navigateur puis appuie sur Installer l’app ou Ajouter à l’écran d’accueil.');
+      }
+    });
+    document.body.appendChild(btn);
+    return btn;
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isStandalone) ensureInstallButton().style.display = 'block';
+  });
+
+  window.addEventListener('appinstalled', function() {
+    const btn = document.getElementById('pwaInstallBtn');
+    if (btn) btn.style.display = 'none';
+  });
+
+  window.addEventListener('load', function() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    }
+    if (!isStandalone && /Android/i.test(navigator.userAgent)) {
+      setTimeout(function() {
+        if (!deferredPrompt) ensureInstallButton().style.display = 'block';
+      }, 2500);
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
