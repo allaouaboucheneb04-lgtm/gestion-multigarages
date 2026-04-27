@@ -430,7 +430,7 @@ modalBody.addEventListener("click", async (e)=>{
     }
   }catch(err){
 
-    alert("Erreur: action impossible (vérifie les règles Firestore / connexion).");
+    alert("Erreur: action impossible. Détail: " + (err?.message || err || "inconnu"));
   }
 });
 
@@ -455,7 +455,7 @@ function _handleModalAction(e){
       }
     }catch(err){
 
-      alert("Erreur: action impossible (vérifie les règles Firestore / connexion).");
+      alert("Erreur: action impossible. Détail: " + (err?.message || err || "inconnu"));
     }
   })();
 }
@@ -5718,10 +5718,25 @@ window.__printWorkorder = async (workorderId)=>{
       </div>
     </div>
   </body></html>`;
-  // Sauvegarde automatique (HTML) dans l'historique
-  try{ await updateDoc(doc(colWorkorders(), workorderId), { invoiceHtml: html, invoiceSavedAt: serverTimestamp() }); }catch(e){}
+  // Impression/PDF: ouvrir la fenêtre tout de suite (iPhone/Safari bloque les popups après un await)
   const w = window.open("", "_blank");
-  w.document.open(); w.document.write(html); w.document.close();
+
+  // Sauvegarde automatique optionnelle: ne jamais bloquer l'impression si Firestore refuse l'update
+  try{
+    updateDoc(doc(colWorkorders(), workorderId), {
+      invoiceHtml: html,
+      invoiceSavedAt: serverTimestamp()
+    }).catch(()=>{});
+  }catch(e){}
+
+  if(w && w.document){
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    try{ w.focus(); }catch(e){}
+  }else{
+    alert("Impossible d'ouvrir la facture. Autorise les fenêtres contextuelles pour ce site.");
+  }
 };
 
 /* Auth boot */
